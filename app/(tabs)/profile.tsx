@@ -6,16 +6,23 @@ import {
   TouchableOpacity,
   Alert,
   StatusBar,
+  TextInput,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/lib/context/AuthContext';
 import { getWorkoutSessions } from '@/lib/queries/exercise';
 import { getWeeklyCalories } from '@/lib/queries/calories';
+import { getBodyWeightLogs, upsertBodyWeight } from '@/lib/queries/bodyweight';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import BodyWeightChart from '@/components/profile/BodyWeightChart';
+import ActivityHeatmap from '@/components/profile/ActivityHeatmap';
 
 function todayDate() {
   return new Date().toISOString().split('T')[0];
@@ -24,9 +31,12 @@ function todayDate() {
 export default function ProfileScreen() {
   const { session, profile, signOut, saveProfile } = useAuth();
   const userId = session?.user.id ?? '';
+  const qc = useQueryClient();
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [weightModalVisible, setWeightModalVisible] = useState(false);
+  const [newWeight, setNewWeight] = useState('');
 
   const [name, setName] = useState(profile?.name ?? '');
   const [age, setAge] = useState(profile?.age?.toString() ?? '');
@@ -47,6 +57,18 @@ export default function ProfileScreen() {
     queryKey: ['weekly-calories', userId],
     queryFn: () => getWeeklyCalories(userId),
     enabled: !!userId,
+  });
+
+  const { data: weightLogs = [] } = useQuery({
+    queryKey: ['body-weight-logs', userId],
+    queryFn: () => getBodyWeightLogs(userId),
+    enabled: !!userId,
+  });
+
+  const weightMutation = useMutation({
+    mutationFn: (weight_kg: number) =>
+      upsertBodyWeight({ user_id: userId, date: todayDate(), weight_kg, notes: null }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['body-weight-logs', userId] }),
   });
 
   const totalWorkouts = sessions.length;
@@ -146,6 +168,21 @@ export default function ProfileScreen() {
       </LinearGradient>
 
       <View style={{ paddingHorizontal: 16, marginTop: 16, gap: 14 }}>
+        {/* Body weight chart */}
+        <Card>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A', marginBottom: 14 }}>Body Weight</Text>
+          <BodyWeightChart
+            logs={weightLogs}
+            goalWeight={profile?.weight_kg ?? null}
+            onAdd={() => { setNewWeight(''); setWeightModalVisible(true); }}
+          />
+        </Card>
+
+        {/* Activity heatmap */}
+        <Card>
+          <ActivityHeatmap activeDates={sessions.map((s) => s.date)} weeks={26} />
+        </Card>
+
         {/* Body Stats */}
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -276,6 +313,46 @@ export default function ProfileScreen() {
           variant="danger"
         />
       </View>
+      
+      {/* Log weight modal */}
+      <Modal visible={weightModalVisible} transparent animationType="fade" onRequestClose={() => setWeightModalVisible(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', paddingHorizontal: 24 }}>
+          <View style={{ backgroundColor: 'white', borderRadius: 24, padding: 24 }}>
+            <Text style={{ color: '#0F172A', fontWeight: '800', fontSize: 20, marginBottom: 6 }}>Log Weight</Text>
+            <Text style={{ color: '#94A3B8', fontSize: 13, marginBottom: 20 }}>
+              {new Date().toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8FAFC', borderRadius: 14, borderWidth: 1.5, borderColor: '#E2E8F0', paddingHorizontal: 16, height: 56, marginBottom: 20 }}>
+              <TextInput
+                value={newWeight}
+                onChangeText={setNewWeight}
+                placeholder="e.g. 75.5"
+                keyboardType="decimal-pad"
+                autoFocus
+                style={{ flex: 1, fontSize: 24, fontWeight: '700', color: '#0F172A' }}
+              />
+              <Text style={{ color: '#94A3B8', fontSize: 16, fontWeight: '600' }}>kg</Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <View style={{ flex: 1 }}>
+                <Button title="Cancel" onPress={() => setWeightModalVisible(false)} variant="ghost" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  title="Save"
+                  onPress={async () => {
+                    const w = parseFloat(newWeight);
+                    if (!w || w < 20 || w > 300) { Alert.alert('Invalid weight', 'Enter a value between 20 and 300 kg.'); return; }
+                    await weightMutation.mutateAsync(w);
+                    setWeightModalVisible(false);
+                  }}
+                  loading={weightMutation.isPending}
+                />
+              </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScrollView>
   );
 }

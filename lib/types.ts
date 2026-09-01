@@ -130,10 +130,22 @@ export interface WorkoutSplit {
 
 // ─── Active workout ──────────────────────────────────────────────────────────
 
+export interface BodyWeightLog {
+  id: string;
+  user_id: string;
+  date: string;
+  weight_kg: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export type NewBodyWeightLog = Omit<BodyWeightLog, 'id' | 'created_at'>;
+
 export interface ActiveSet {
   id: string;
   weight: string;
   reps: string;
+  rpe: string;    // 1–10, optional
   done: boolean;
 }
 

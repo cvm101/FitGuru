@@ -1,3 +1,4 @@
+import MuscleMap from '@/components/exercise/MuscleMap';
 import { useState, useCallback } from 'react';
 import {
   View,
@@ -7,6 +8,7 @@ import {
   RefreshControl,
   Alert,
   StatusBar,
+  TextInput,
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
@@ -106,6 +108,23 @@ export default function ExerciseScreen() {
     setRefreshing(false);
   }, [refetch, refetchProgress]);
 
+  const [calc1RMWeight, setCalc1RMWeight] = useState('');
+  const [calc1RMReps, setCalc1RMReps] = useState('');
+
+  // Muscle volume map — aggregate sets per muscle group in last 7 days
+  const oneWeekAgo = new Date(); oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const recentSessions = sessions.filter((s) => new Date(s.date + 'T00:00:00') >= oneWeekAgo);
+  const muscleVolumes: Record<string, number> = {};
+  recentSessions.forEach((s) => {
+    (s.workout_sets ?? []).forEach((ws) => {
+      const mg = ws.muscle_group || '';
+      muscleVolumes[mg] = (muscleVolumes[mg] ?? 0) + 1;
+    });
+  });
+  const maxMusVol = Math.max(...Object.values(muscleVolumes), 1);
+  const normalizedVolumes: Record<string, number> = Object.fromEntries(
+    Object.entries(muscleVolumes).map(([k, v]) => [k, v / maxMusVol])
+  );
   const trackedExercises = Array.from(new Set(sessions.flatMap((s) => s.workout_sets?.map((ws) => ws.exercise_name) ?? []))).slice(0, 12);
   const weekSessions = sessions.filter((s) => { const d = new Date(s.date); const now = new Date(); const ws = new Date(now); ws.setDate(ws.getDate() - 7); return d >= ws; }).length;
 
@@ -248,8 +267,87 @@ export default function ExerciseScreen() {
       {/* Progress */}
       {activeTab === 'progress' && (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 32 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366F1" />}>
+          
+          {/* 1RM Calculator */}
+          <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 16, marginBottom: 14, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <View style={{ width: 32, height: 32, backgroundColor: '#EEF2FF', borderRadius: 11, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="calculator" size={16} color="#6366F1" />
+              </View>
+              <View>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>1RM Calculator</Text>
+                <Text style={{ fontSize: 11, color: '#94A3B8' }}>One-Rep Max estimator</Text>
+              </View>
+            </View>
+
+            {/* Explanation */}
+            <View style={{ backgroundColor: '#F8FAFC', borderRadius: 12, padding: 12, marginBottom: 12, borderLeftWidth: 3, borderLeftColor: '#6366F1' }}>
+              <Text style={{ color: '#1E293B', fontSize: 13, fontWeight: '700', marginBottom: 4 }}>What is 1RM?</Text>
+              <Text style={{ color: '#64748B', fontSize: 12, lineHeight: 18 }}>
+                <Text style={{ fontWeight: '600' }}>1RM (One-Rep Max)</Text> is the maximum weight you can lift for a single repetition on an exercise — it's the gold standard for measuring strength.{'\n\n'}
+                You don't need to actually attempt a dangerous max lift. Just enter a weight you recently lifted and the number of reps you did, and we'll estimate your 1RM using the <Text style={{ fontWeight: '600' }}>Epley formula</Text>. Works best with <Text style={{ color: '#6366F1', fontWeight: '600' }}>1–12 reps</Text>.{'\n\n'}
+                The percentages below (60–100%) show how much weight to use for different training goals — e.g. 80% for hypertrophy (muscle building), 90%+ for strength work.
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '600', marginBottom: 4 }}>Weight (kg)</Text>
+                <TextInput
+                  value={calc1RMWeight}
+                  onChangeText={setCalc1RMWeight}
+                  placeholder="e.g. 80"
+                  keyboardType="decimal-pad"
+                  style={{ backgroundColor: '#F8FAFC', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, fontWeight: '600', color: '#0F172A' }}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '600', marginBottom: 4 }}>Reps</Text>
+                <TextInput
+                  value={calc1RMReps}
+                  onChangeText={setCalc1RMReps}
+                  placeholder="e.g. 5"
+                  keyboardType="number-pad"
+                  style={{ backgroundColor: '#F8FAFC', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, fontWeight: '600', color: '#0F172A' }}
+                />
+              </View>
+            </View>
+            {!!(calc1RMWeight && calc1RMReps) && (() => {
+              const w = parseFloat(calc1RMWeight);
+              const r = parseInt(calc1RMReps, 10);
+              if (!w || !r || r < 1) return null;
+              const orm = Math.round(w * (1 + r / 30));
+                  const pcts = [
+                    { p: 100, label: 'Max' },
+                    { p: 90, label: 'Strength' },
+                    { p: 80, label: 'Hypertrophy' },
+                    { p: 70, label: 'Endurance' },
+                    { p: 60, label: 'Warm-up' },
+                  ];
+                  return (
+                    <View style={{ backgroundColor: '#EEF2FF', borderRadius: 14, padding: 12 }}>
+                      <Text style={{ color: '#6366F1', fontWeight: '900', fontSize: 28, textAlign: 'center' }}>{orm} <Text style={{ fontSize: 14, fontWeight: '400', color: '#818CF8' }}>kg est. 1RM</Text></Text>
+                      <Text style={{ color: '#818CF8', fontSize: 11, textAlign: 'center', marginTop: 2, marginBottom: 10 }}>Based on {w}kg × {r} reps (Epley formula)</Text>
+                      <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+                        {pcts.map(({ p, label }) => (
+                          <View key={p} style={{ flex: 1, minWidth: 56, backgroundColor: 'white', borderRadius: 10, padding: 8, alignItems: 'center' }}>
+                            <Text style={{ color: '#6366F1', fontWeight: '800', fontSize: 14 }}>{Math.round(orm * p / 100)}</Text>
+                            <Text style={{ color: '#94A3B8', fontSize: 9, marginTop: 1 }}>{p}%</Text>
+                            <Text style={{ color: '#CBD5E1', fontSize: 8, marginTop: 1 }}>{label}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  );
+            })()}
+          </View>
+
+          {/* Muscle map */}
+          <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 16, marginBottom: 14, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
+            <MuscleMap muscleVolumes={normalizedVolumes} period="this week" />
+          </View>
+
           {trackedExercises.length === 0 ? (
-            <View style={{ alignItems: 'center', paddingTop: 60, gap: 10 }}>
+            <View style={{ alignItems: 'center', paddingTop: 32, gap: 10 }}>
               <Ionicons name="trending-up-outline" size={40} color="#CBD5E1" />
               <Text style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', paddingHorizontal: 32 }}>Log workouts with weights to see your strength progression here</Text>
             </View>
@@ -282,19 +380,30 @@ export default function ExerciseScreen() {
               )}
 
               {/* PRs */}
-              <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 16, marginTop: 16, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
+              <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 16, marginTop: 14, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                   <Ionicons name="trophy" size={18} color="#F59E0B" />
                   <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>Personal Records</Text>
                 </View>
                 {trackedExercises.slice(0, 8).map((ex) => {
-                  const maxWeight = Math.max(...sessions.flatMap((s) => s.workout_sets ?? []).filter((ws) => ws.exercise_name === ex && ws.weight_kg).map((ws) => ws.weight_kg ?? 0));
+                  const allSets = sessions.flatMap((s) => s.workout_sets ?? []).filter((ws) => ws.exercise_name === ex && ws.weight_kg && ws.reps);
+                  const maxWeight = Math.max(...allSets.map((ws) => ws.weight_kg ?? 0));
+                  const bestSet = allSets.find((ws) => ws.weight_kg === maxWeight);
+                  const est1RM = bestSet && bestSet.reps && bestSet.reps <= 12
+                    ? Math.round(maxWeight * (1 + bestSet.reps / 30))
+                    : null;
                   return maxWeight > 0 ? (
                     <View key={ex} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
                       <Text style={{ color: '#475569', fontSize: 13, flex: 1 }} numberOfLines={1}>{ex}</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFFBEB', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
-                        <Ionicons name="trophy" size={12} color="#F59E0B" />
-                        <Text style={{ color: '#D97706', fontWeight: '800', fontSize: 13 }}>{maxWeight}kg</Text>
+                      <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                        <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                          <Text style={{ color: '#D97706', fontWeight: '800', fontSize: 12 }}>🏆 {maxWeight}kg × {bestSet?.reps}</Text>
+                        </View>
+                        {est1RM && (
+                          <View style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                            <Text style={{ color: '#6366F1', fontWeight: '700', fontSize: 11 }}>~{est1RM}kg 1RM</Text>
+                          </View>
+                        )}
                       </View>
                     </View>
                   ) : null;

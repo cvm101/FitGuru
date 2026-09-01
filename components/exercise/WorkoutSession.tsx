@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,17 @@ import {
   TouchableOpacity,
   Modal,
   Alert,
+  Vibration,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { ActiveExercise, ActiveSet, Exercise, WorkoutSplit } from '@/lib/types';
+import { LinearGradient } from 'expo-linear-gradient';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import exercisesData from '@/lib/data/exercises.json';
+import type { ActiveExercise, ActiveSet, Exercise } from '@/lib/types';
 import ExerciseSearch from './ExerciseSearch';
+
+const ALL_EXERCISES: Exercise[] = exercisesData as Exercise[];
 
 interface WorkoutSessionProps {
   visible: boolean;
@@ -20,141 +27,188 @@ interface WorkoutSessionProps {
   onClose: () => void;
 }
 
-function generateId() {
-  return Math.random().toString(36).slice(2);
+const REST_PRESETS = [60, 90, 120, 180];
+
+function generateId() { return Math.random().toString(36).slice(2); }
+
+function formatTime(secs: number) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export default function WorkoutSession({
-  visible,
-  splitName,
-  suggestedExercises = [],
-  onFinish,
-  onClose,
-}: WorkoutSessionProps) {
+export default function WorkoutSession({ visible, splitName, suggestedExercises = [], onFinish, onClose }: WorkoutSessionProps) {
   const [exercises, setExercises] = useState<ActiveExercise[]>([]);
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [startTime] = useState(Date.now());
+
+  // Workout timer
+  const startTimeRef = useRef(Date.now());
   const [elapsed, setElapsed] = useState(0);
 
+  // Rest timer
+  const [restActive, setRestActive] = useState(false);
+  const [restTotal, setRestTotal] = useState(90);
+  const [restRemaining, setRestRemaining] = useState(90);
+  const restRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Keep screen awake while modal is open
+  const keepAwakeActiveRef = useRef(false);
+
+  useEffect(() => {
+    if (visible) {
+      activateKeepAwakeAsync('workout')
+        .then(() => { keepAwakeActiveRef.current = true; })
+        .catch(() => { keepAwakeActiveRef.current = false; });
+      startTimeRef.current = Date.now();
+      setElapsed(0);
+
+      // Pre-populate with all suggested exercises from the split day
+      if (suggestedExercises.length > 0) {
+        const preloaded: ActiveExercise[] = suggestedExercises.map((name) => {
+          const found = ALL_EXERCISES.find(
+            (e) => e.name.toLowerCase() === name.toLowerCase()
+          );
+          return {
+            id: generateId(),
+            name: found?.name ?? name,
+            muscleGroup: found?.muscleGroup ?? 'General',
+            sets: [{ id: generateId(), weight: '', reps: '', rpe: '', done: false }],
+          };
+        });
+        setExercises(preloaded);
+      } else {
+        setExercises([]);
+      }
+    } else {
+      if (keepAwakeActiveRef.current) {
+        try { deactivateKeepAwake('workout'); } catch (_) {}
+        keepAwakeActiveRef.current = false;
+      }
+      stopRestTimer();
+      setExercises([]);
+    }
+  }, [visible]);
+
+  // Workout elapsed ticker
   useEffect(() => {
     if (!visible) return;
-    const interval = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startTime) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [visible, startTime]);
+    const t = setInterval(() => setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000)), 1000);
+    return () => clearInterval(t);
+  }, [visible]);
 
-  function formatTime(secs: number) {
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
-    const s = secs % 60;
-    return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  // Rest timer countdown
+  function startRestTimer(seconds: number) {
+    stopRestTimer();
+    setRestTotal(seconds);
+    setRestRemaining(seconds);
+    setRestActive(true);
+    restRef.current = setInterval(() => {
+      setRestRemaining((prev) => {
+        if (prev <= 1) {
+          stopRestTimer();
+          Vibration.vibrate(Platform.OS === 'android' ? [0, 300, 100, 300] : 400);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   }
 
+  function stopRestTimer() {
+    if (restRef.current) { clearInterval(restRef.current); restRef.current = null; }
+    setRestActive(false);
+  }
+
+  useEffect(() => { return () => stopRestTimer(); }, []);
+
+  // Exercise management
   function addExercise(ex: Exercise) {
-    const set: ActiveSet = { id: generateId(), weight: '', reps: '', done: false };
-    setExercises((prev) => [
-      ...prev,
-      { id: generateId(), name: ex.name, muscleGroup: ex.muscleGroup, sets: [set] },
-    ]);
+    const set: ActiveSet = { id: generateId(), weight: '', reps: '', rpe: '', done: false };
+    setExercises((prev) => [...prev, { id: generateId(), name: ex.name, muscleGroup: ex.muscleGroup, sets: [set] }]);
     setShowExerciseSearch(false);
   }
 
   function addSet(exerciseId: string) {
-    setExercises((prev) =>
-      prev.map((ex) =>
-        ex.id === exerciseId
-          ? { ...ex, sets: [...ex.sets, { id: generateId(), weight: '', reps: '', done: false }] }
-          : ex
-      )
-    );
+    setExercises((prev) => prev.map((ex) =>
+      ex.id === exerciseId
+        ? { ...ex, sets: [...ex.sets, { id: generateId(), weight: ex.sets[ex.sets.length - 1]?.weight ?? '', reps: '', rpe: '', done: false }] }
+        : ex
+    ));
   }
 
-  function updateSet(exerciseId: string, setId: string, field: 'weight' | 'reps', value: string) {
-    setExercises((prev) =>
-      prev.map((ex) =>
-        ex.id === exerciseId
-          ? {
-              ...ex,
-              sets: ex.sets.map((s) => (s.id === setId ? { ...s, [field]: value } : s)),
-            }
-          : ex
-      )
-    );
+  function updateSet(exerciseId: string, setId: string, field: 'weight' | 'reps' | 'rpe', value: string) {
+    setExercises((prev) => prev.map((ex) =>
+      ex.id === exerciseId
+        ? { ...ex, sets: ex.sets.map((s) => (s.id === setId ? { ...s, [field]: value } : s)) }
+        : ex
+    ));
   }
 
   function toggleSetDone(exerciseId: string, setId: string) {
-    setExercises((prev) =>
-      prev.map((ex) =>
-        ex.id === exerciseId
-          ? {
-              ...ex,
-              sets: ex.sets.map((s) => (s.id === setId ? { ...s, done: !s.done } : s)),
-            }
-          : ex
-      )
-    );
+    setExercises((prev) => prev.map((ex) =>
+      ex.id === exerciseId
+        ? { ...ex, sets: ex.sets.map((s) => (s.id === setId ? { ...s, done: !s.done } : s)) }
+        : ex
+    ));
+    // Auto-start rest timer when set is marked done
+    startRestTimer(restTotal);
   }
 
-  function removeExercise(exerciseId: string) {
-    setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId));
-  }
-
+  function removeExercise(id: string) { setExercises((prev) => prev.filter((ex) => ex.id !== id)); }
   function removeSet(exerciseId: string, setId: string) {
     setExercises((prev) =>
       prev.map((ex) =>
-        ex.id === exerciseId
-          ? { ...ex, sets: ex.sets.filter((s) => s.id !== setId) }
-          : ex
+        ex.id === exerciseId ? { ...ex, sets: ex.sets.filter((s) => s.id !== setId) } : ex
       ).filter((ex) => ex.sets.length > 0)
     );
   }
 
   async function handleFinish() {
-    if (exercises.length === 0) {
-      Alert.alert('Empty Workout', 'Add at least one exercise before finishing.');
-      return;
-    }
-    const hasSets = exercises.some((ex) => ex.sets.some((s) => s.weight || s.reps));
-    if (!hasSets) {
-      Alert.alert('No Sets Logged', 'Log at least one set before finishing.');
+    if (exercises.length === 0) { Alert.alert('Empty Workout', 'Add at least one exercise.'); return; }
+    // Only save exercises that actually have set data — skip empty ones
+    const loggedExercises = exercises.filter((ex) => ex.sets.some((s) => s.weight || s.reps));
+    if (loggedExercises.length === 0) {
+      Alert.alert('No Sets Logged', 'Fill in at least one weight or rep count before finishing.');
       return;
     }
     setSaving(true);
-    try {
-      await onFinish(exercises, Math.ceil(elapsed / 60));
-    } finally {
-      setSaving(false);
-    }
+    try { await onFinish(loggedExercises, Math.ceil(elapsed / 60)); } finally { setSaving(false); }
   }
 
   function handleClose() {
-    if (exercises.length > 0) {
-      Alert.alert('Discard Workout?', 'Your workout will be lost.', [
+    // Only ask for confirmation if the user has actually started logging data
+    const hasData = exercises.some((ex) => ex.sets.some((s) => s.weight || s.reps || s.done));
+    if (hasData) {
+      Alert.alert('Discard Workout?', 'You have logged sets — are you sure you want to exit?', [
         { text: 'Keep Going', style: 'cancel' },
         { text: 'Discard', style: 'destructive', onPress: () => { setExercises([]); onClose(); } },
       ]);
     } else {
+      setExercises([]);
       onClose();
     }
   }
 
+  const doneCount = exercises.reduce((s, e) => s + e.sets.filter((x) => x.done).length, 0);
+  const totalCount = exercises.reduce((s, e) => s + e.sets.length, 0);
+  const restPct = restTotal > 0 ? (restTotal - restRemaining) / restTotal : 0;
+
   if (showExerciseSearch) {
     return (
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-        <View className="flex-1 bg-background">
-          <View className="flex-row items-center justify-between px-4 pt-4 pb-3 bg-white border-b border-border">
-            <TouchableOpacity onPress={() => setShowExerciseSearch(false)} className="p-1">
+        <View style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
+            <TouchableOpacity onPress={() => setShowExerciseSearch(false)} style={{ padding: 4 }}>
               <Ionicons name="arrow-back" size={22} color="#64748B" />
             </TouchableOpacity>
-            <Text className="text-slate-800 font-bold text-base">Add Exercise</Text>
+            <Text style={{ color: '#0F172A', fontWeight: '700', fontSize: 16 }}>Add Exercise</Text>
             <View style={{ width: 30 }} />
           </View>
-          <ExerciseSearch
-            onSelect={addExercise}
-            selected={exercises.map((e) => e.name)}
-          />
+          <ExerciseSearch onSelect={addExercise} selected={exercises.map((e) => e.name)} />
         </View>
       </Modal>
     );
@@ -162,97 +216,137 @@ export default function WorkoutSession({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <View className="flex-1 bg-background">
+      <View style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
         {/* Header */}
-        <View className="bg-primary px-4 pt-12 pb-4">
-          <View className="flex-row items-center justify-between mb-1">
-            <TouchableOpacity onPress={handleClose} className="p-1">
-              <Ionicons name="close" size={24} color="rgba(255,255,255,0.8)" />
+        <LinearGradient colors={['#1E1B4B', '#3730A3']} style={{ paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <TouchableOpacity onPress={handleClose} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="close" size={20} color="rgba(255,255,255,0.8)" />
             </TouchableOpacity>
-            <View className="flex-row items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full">
-              <Ionicons name="time-outline" size={14} color="white" />
-              <Text className="text-white font-mono font-semibold text-sm">{formatTime(elapsed)}</Text>
+
+            {/* Workout timer */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 }}>
+              <Ionicons name="timer-outline" size={14} color="white" />
+              <Text style={{ color: 'white', fontWeight: '700', fontSize: 15, fontVariant: ['tabular-nums'] as any }}>{formatTime(elapsed)}</Text>
             </View>
+
             <TouchableOpacity
               onPress={handleFinish}
               disabled={saving}
-              className="bg-white px-4 py-1.5 rounded-full"
+              style={{ backgroundColor: '#10B981', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12 }}
             >
-              <Text className="text-primary font-bold text-sm">{saving ? 'Saving...' : 'Finish'}</Text>
+              <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>{saving ? 'Saving…' : 'Finish'}</Text>
             </TouchableOpacity>
           </View>
-          <Text className="text-white font-bold text-xl mt-1">{splitName}</Text>
-          <Text className="text-white/70 text-sm">{exercises.length} exercises · {exercises.reduce((s, e) => s + e.sets.filter((x) => x.done).length, 0)} sets done</Text>
-        </View>
 
-        <ScrollView className="flex-1 px-4 pt-4" contentContainerStyle={{ paddingBottom: 100 }}>
-          {exercises.length === 0 && (
-            <View className="items-center py-12 gap-3">
-              <View className="w-16 h-16 bg-primary-lighter rounded-2xl items-center justify-center">
-                <Ionicons name="barbell-outline" size={32} color="#10B981" />
+          <Text style={{ color: 'white', fontWeight: '800', fontSize: 18 }}>{splitName}</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 }}>
+            {exercises.length} exercises · {doneCount}/{totalCount} sets done
+          </Text>
+        </LinearGradient>
+
+        {/* Rest timer bar */}
+        {restActive && (
+          <View style={{ backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', padding: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="timer" size={14} color="#6366F1" />
+                <Text style={{ color: '#6366F1', fontWeight: '700', fontSize: 13 }}>Rest Timer</Text>
               </View>
-              <Text className="text-slate-700 font-semibold text-lg">Add your first exercise</Text>
-              <Text className="text-slate-400 text-sm text-center px-8">
-                {suggestedExercises.length > 0 ? `Suggested: ${suggestedExercises.slice(0, 3).join(', ')}...` : 'Search from 50+ exercises'}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ color: '#0F172A', fontWeight: '800', fontSize: 18, fontVariant: ['tabular-nums'] as any }}>{formatTime(restRemaining)}</Text>
+                <TouchableOpacity onPress={stopRestTimer} style={{ width: 24, height: 24, borderRadius: 8, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="close" size={14} color="#64748B" />
+                </TouchableOpacity>
+              </View>
+            </View>
+            {/* Progress bar */}
+            <View style={{ height: 5, backgroundColor: '#EEF2FF', borderRadius: 3, overflow: 'hidden' }}>
+              <View style={{ height: '100%', backgroundColor: restRemaining === 0 ? '#10B981' : '#6366F1', borderRadius: 3, width: `${restPct * 100}%` }} />
+            </View>
+            {/* Preset buttons */}
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+              {REST_PRESETS.map((s) => (
+                <TouchableOpacity key={s} onPress={() => startRestTimer(s)} style={{ flex: 1, paddingVertical: 4, borderRadius: 8, backgroundColor: restTotal === s && restActive ? '#6366F1' : '#F1F5F9', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: restTotal === s && restActive ? 'white' : '#64748B' }}>{s}s</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 14, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
+          {exercises.length === 0 && (
+            <View style={{ alignItems: 'center', paddingVertical: 48, gap: 10 }}>
+              <View style={{ width: 64, height: 64, backgroundColor: '#EEF2FF', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="barbell-outline" size={30} color="#6366F1" />
+              </View>
+              <Text style={{ color: '#1E293B', fontWeight: '700', fontSize: 16 }}>Add your first exercise</Text>
+              <Text style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', paddingHorizontal: 32 }}>
+                Search from 50+ exercises to start logging sets
               </Text>
             </View>
           )}
 
-          {exercises.map((ex, exIdx) => (
-            <View
-              key={ex.id}
-              className="bg-white rounded-2xl mb-4 overflow-hidden"
-              style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 }}
-            >
+          {exercises.map((ex) => (
+            <View key={ex.id} style={{ backgroundColor: 'white', borderRadius: 20, marginBottom: 12, overflow: 'hidden', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
               {/* Exercise header */}
-              <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-50">
-                <View>
-                  <Text className="text-slate-800 font-bold">{ex.name}</Text>
-                  <Text className="text-slate-400 text-xs">{ex.muscleGroup}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#0F172A', fontWeight: '700', fontSize: 14 }}>{ex.name}</Text>
+                  <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 1 }}>{ex.muscleGroup}</Text>
                 </View>
-                <TouchableOpacity onPress={() => removeExercise(ex.id)}>
-                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                <TouchableOpacity onPress={() => removeExercise(ex.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
                 </TouchableOpacity>
               </View>
 
-              {/* Set headers */}
-              <View className="flex-row px-4 py-2 bg-slate-50">
-                <Text className="text-slate-400 text-xs w-8">SET</Text>
-                <Text className="text-slate-400 text-xs flex-1 text-center">WEIGHT (kg)</Text>
-                <Text className="text-slate-400 text-xs flex-1 text-center">REPS</Text>
-                <Text className="text-slate-400 text-xs w-10 text-center">DONE</Text>
+              {/* Column headers */}
+              <View style={{ flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 6, backgroundColor: '#F8FAFC' }}>
+                <Text style={{ width: 28, color: '#94A3B8', fontSize: 10, fontWeight: '700' }}>SET</Text>
+                <Text style={{ flex: 1, color: '#94A3B8', fontSize: 10, fontWeight: '700', textAlign: 'center' }}>KG</Text>
+                <Text style={{ flex: 1, color: '#94A3B8', fontSize: 10, fontWeight: '700', textAlign: 'center' }}>REPS</Text>
+                <Text style={{ width: 44, color: '#94A3B8', fontSize: 10, fontWeight: '700', textAlign: 'center' }}>RPE</Text>
+                <Text style={{ width: 32, color: '#94A3B8', fontSize: 10, fontWeight: '700', textAlign: 'center' }}>✓</Text>
               </View>
 
               {/* Sets */}
               {ex.sets.map((set, sIdx) => (
-                <View
-                  key={set.id}
-                  className={`flex-row items-center px-4 py-2 ${set.done ? 'bg-primary-lighter' : ''}`}
-                >
-                  <Text className="text-slate-500 text-sm font-semibold w-8">{sIdx + 1}</Text>
+                <View key={set.id} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, backgroundColor: set.done ? '#ECFDF5' : 'white', borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
+                  <Text style={{ width: 28, color: '#64748B', fontSize: 13, fontWeight: '700' }}>{sIdx + 1}</Text>
                   <TextInput
-                    className="flex-1 text-slate-800 text-center bg-slate-50 rounded-lg py-1.5 mx-1 text-sm"
-                    placeholder="0"
+                    style={{ flex: 1, textAlign: 'center', color: '#0F172A', fontSize: 14, fontWeight: '600', backgroundColor: set.done ? 'rgba(16,185,129,0.1)' : '#F8FAFC', borderRadius: 8, paddingVertical: 5, marginHorizontal: 2 }}
+                    placeholder="—"
                     placeholderTextColor="#CBD5E1"
                     value={set.weight}
                     onChangeText={(v) => updateSet(ex.id, set.id, 'weight', v)}
                     keyboardType="decimal-pad"
+                    selectTextOnFocus
                   />
                   <TextInput
-                    className="flex-1 text-slate-800 text-center bg-slate-50 rounded-lg py-1.5 mx-1 text-sm"
-                    placeholder="0"
+                    style={{ flex: 1, textAlign: 'center', color: '#0F172A', fontSize: 14, fontWeight: '600', backgroundColor: set.done ? 'rgba(16,185,129,0.1)' : '#F8FAFC', borderRadius: 8, paddingVertical: 5, marginHorizontal: 2 }}
+                    placeholder="—"
                     placeholderTextColor="#CBD5E1"
                     value={set.reps}
                     onChangeText={(v) => updateSet(ex.id, set.id, 'reps', v)}
                     keyboardType="number-pad"
+                    selectTextOnFocus
                   />
-                  <TouchableOpacity
-                    onPress={() => toggleSetDone(ex.id, set.id)}
-                    className="w-10 items-center"
-                  >
+                  {/* RPE input */}
+                  <TextInput
+                    style={{ width: 44, textAlign: 'center', color: '#6366F1', fontSize: 13, fontWeight: '700', backgroundColor: '#EEF2FF', borderRadius: 8, paddingVertical: 5, marginHorizontal: 2 }}
+                    placeholder="—"
+                    placeholderTextColor="#C7D2FE"
+                    value={set.rpe}
+                    onChangeText={(v) => updateSet(ex.id, set.id, 'rpe', v)}
+                    keyboardType="decimal-pad"
+                    maxLength={4}
+                    selectTextOnFocus
+                  />
+                  <TouchableOpacity onPress={() => toggleSetDone(ex.id, set.id)} style={{ width: 32, alignItems: 'center' }}>
                     <Ionicons
                       name={set.done ? 'checkmark-circle' : 'ellipse-outline'}
-                      size={24}
+                      size={26}
                       color={set.done ? '#10B981' : '#CBD5E1'}
                     />
                   </TouchableOpacity>
@@ -260,12 +354,9 @@ export default function WorkoutSession({
               ))}
 
               {/* Add set */}
-              <TouchableOpacity
-                onPress={() => addSet(ex.id)}
-                className="flex-row items-center gap-2 px-4 py-3 border-t border-slate-50"
-              >
-                <Ionicons name="add-circle-outline" size={18} color="#10B981" />
-                <Text className="text-primary text-sm font-medium">Add Set</Text>
+              <TouchableOpacity onPress={() => addSet(ex.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 12 }}>
+                <Ionicons name="add-circle-outline" size={18} color="#6366F1" />
+                <Text style={{ color: '#6366F1', fontWeight: '600', fontSize: 13 }}>Add Set</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -273,11 +364,22 @@ export default function WorkoutSession({
           {/* Add exercise button */}
           <TouchableOpacity
             onPress={() => setShowExerciseSearch(true)}
-            className="flex-row items-center justify-center gap-2 border-2 border-dashed border-primary/30 rounded-2xl py-4"
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 2, borderStyle: 'dashed', borderColor: '#C7D2FE', borderRadius: 18, paddingVertical: 16, backgroundColor: '#EEF2FF' }}
           >
-            <Ionicons name="add" size={20} color="#10B981" />
-            <Text className="text-primary font-semibold">Add Exercise</Text>
+            <Ionicons name="add" size={22} color="#6366F1" />
+            <Text style={{ color: '#6366F1', fontWeight: '700', fontSize: 15 }}>Add Exercise</Text>
           </TouchableOpacity>
+
+          {/* Rest timer manual trigger */}
+          {!restActive && exercises.length > 0 && (
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+              {REST_PRESETS.map((s) => (
+                <TouchableOpacity key={s} onPress={() => startRestTimer(s)} style={{ flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: 'white', borderWidth: 1.5, borderColor: '#E2E8F0', alignItems: 'center' }}>
+                  <Text style={{ color: '#64748B', fontSize: 12, fontWeight: '600' }}>{s}s rest</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </ScrollView>
       </View>
     </Modal>
