@@ -106,6 +106,12 @@ export interface Exercise {
   equipment: string;
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
   instructions?: string;
+  /** Animated GIF URL from hasaneyldrm/exercises-dataset (© Gym Visual) */
+  gifUrl?: string;
+  /** 180×180 thumbnail URL from hasaneyldrm/exercises-dataset (© Gym Visual) */
+  thumbnailUrl?: string;
+  /** Dataset numeric ID for reference */
+  datasetId?: string;
 }
 
 // ─── Workout splits ───────────────────────────────────────────────────────────
@@ -153,5 +159,7 @@ export interface ActiveExercise {
   id: string;
   name: string;
   muscleGroup: string;
+  gifUrl?: string;
+  thumbnailUrl?: string;
   sets: ActiveSet[];
 }

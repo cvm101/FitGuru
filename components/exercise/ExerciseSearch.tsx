@@ -5,6 +5,7 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import exercisesData from '@/lib/data/exercises.json';
@@ -79,9 +80,18 @@ export default function ExerciseSearch({ onSelect, selected = [] }: ExerciseSear
               style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1 }}
               disabled={isSelected}
             >
-              <View className="w-10 h-10 bg-primary-lighter rounded-xl items-center justify-center">
-                <Ionicons name="barbell-outline" size={18} color="#10B981" />
-              </View>
+              {/* Thumbnail from dataset, falls back to icon */}
+              {item.thumbnailUrl ? (
+                <Image
+                  source={{ uri: item.thumbnailUrl }}
+                  style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#F1F5F9' }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View className="w-11 h-11 bg-primary-lighter rounded-xl items-center justify-center">
+                  <Ionicons name="barbell-outline" size={20} color="#10B981" />
+                </View>
+              )}
               <View className="flex-1">
                 <Text className="text-slate-800 font-semibold text-sm">{item.name}</Text>
                 <Text className="text-slate-400 text-xs">{item.muscleGroup} · {item.equipment}</Text>

@@ -1,56 +1,756 @@
 [
-  { "id": "barbell-bench-press", "name": "Barbell Bench Press", "muscleGroup": "Chest", "secondaryMuscles": ["Triceps", "Front Delts"], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Lie flat on bench, grip bar shoulder-width apart. Lower bar to chest, then press back up." },
-  { "id": "incline-dumbbell-press", "name": "Incline Dumbbell Press", "muscleGroup": "Chest", "secondaryMuscles": ["Triceps", "Front Delts"], "equipment": "Dumbbell", "difficulty": "Intermediate", "instructions": "Set bench to 30–45°. Press dumbbells up and slightly inward at top." },
-  { "id": "decline-bench-press", "name": "Decline Bench Press", "muscleGroup": "Chest", "secondaryMuscles": ["Triceps"], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Set bench to -15°. Lower bar to lower chest, press back up." },
-  { "id": "cable-fly", "name": "Cable Fly", "muscleGroup": "Chest", "secondaryMuscles": ["Front Delts"], "equipment": "Cable", "difficulty": "Beginner", "instructions": "Stand between cables set at shoulder height. With slight elbow bend, arc hands together." },
-  { "id": "push-up", "name": "Push-Up", "muscleGroup": "Chest", "secondaryMuscles": ["Triceps", "Core"], "equipment": "Bodyweight", "difficulty": "Beginner", "instructions": "Hands shoulder-width apart. Lower chest to floor, press back up keeping core tight." },
-  { "id": "chest-dips", "name": "Chest Dips", "muscleGroup": "Chest", "secondaryMuscles": ["Triceps", "Shoulders"], "equipment": "Bodyweight", "difficulty": "Intermediate", "instructions": "Lean forward on parallel bars. Dip until upper arms are parallel, press back up." },
-  { "id": "dumbbell-pullover", "name": "Dumbbell Pullover", "muscleGroup": "Chest", "secondaryMuscles": ["Back", "Triceps"], "equipment": "Dumbbell", "difficulty": "Intermediate", "instructions": "Lie across bench. Hold dumbbell overhead, lower behind head then pull back." },
-  { "id": "pull-up", "name": "Pull-Up", "muscleGroup": "Back", "secondaryMuscles": ["Biceps", "Rear Delts"], "equipment": "Bodyweight", "difficulty": "Intermediate", "instructions": "Hang from bar, palms facing away. Pull until chin clears bar, lower slowly." },
-  { "id": "chin-up", "name": "Chin-Up", "muscleGroup": "Back", "secondaryMuscles": ["Biceps"], "equipment": "Bodyweight", "difficulty": "Beginner", "instructions": "Hang from bar, palms facing you. Pull until chin clears bar." },
-  { "id": "barbell-row", "name": "Barbell Row", "muscleGroup": "Back", "secondaryMuscles": ["Biceps", "Rear Delts"], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Hinge forward 45°. Pull bar to lower chest, squeeze shoulder blades together." },
-  { "id": "dumbbell-row", "name": "Dumbbell Row", "muscleGroup": "Back", "secondaryMuscles": ["Biceps"], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Place knee and hand on bench. Row dumbbell to hip, keeping elbow close." },
-  { "id": "lat-pulldown", "name": "Lat Pulldown", "muscleGroup": "Back", "secondaryMuscles": ["Biceps"], "equipment": "Cable", "difficulty": "Beginner", "instructions": "Grip bar wide. Pull down to upper chest while leaning slightly back." },
-  { "id": "seated-cable-row", "name": "Seated Cable Row", "muscleGroup": "Back", "secondaryMuscles": ["Biceps", "Rear Delts"], "equipment": "Cable", "difficulty": "Beginner", "instructions": "Sit upright. Pull handle to abdomen, squeezing shoulder blades at end." },
-  { "id": "deadlift", "name": "Deadlift", "muscleGroup": "Back", "secondaryMuscles": ["Glutes", "Hamstrings", "Traps"], "equipment": "Barbell", "difficulty": "Advanced", "instructions": "Hip-width stance, bar over mid-foot. Drive hips forward as bar passes knees. Keep back neutral." },
-  { "id": "t-bar-row", "name": "T-Bar Row", "muscleGroup": "Back", "secondaryMuscles": ["Biceps", "Rear Delts"], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Straddle bar, hinge forward. Pull bar to chest, squeezing back muscles." },
-  { "id": "face-pull", "name": "Face Pull", "muscleGroup": "Back", "secondaryMuscles": ["Rear Delts", "Rotator Cuff"], "equipment": "Cable", "difficulty": "Beginner", "instructions": "Set cable at face height. Pull rope to face while pulling elbows back and out." },
-  { "id": "overhead-press", "name": "Overhead Press", "muscleGroup": "Shoulders", "secondaryMuscles": ["Triceps", "Upper Chest"], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Stand with bar at collar-bone level. Press overhead to lockout, keep core braced." },
-  { "id": "dumbbell-shoulder-press", "name": "Dumbbell Shoulder Press", "muscleGroup": "Shoulders", "secondaryMuscles": ["Triceps"], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Sit or stand. Press dumbbells from ear level up to lockout." },
-  { "id": "lateral-raise", "name": "Lateral Raise", "muscleGroup": "Shoulders", "secondaryMuscles": [], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Slight elbow bend. Raise arms out to sides to shoulder height, control the descent." },
-  { "id": "front-raise", "name": "Front Raise", "muscleGroup": "Shoulders", "secondaryMuscles": ["Upper Chest"], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Raise dumbbells straight in front to shoulder height. Avoid swinging." },
-  { "id": "rear-delt-fly", "name": "Rear Delt Fly", "muscleGroup": "Shoulders", "secondaryMuscles": ["Back"], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Hinge forward 90°. Raise arms out to sides with slight elbow bend." },
-  { "id": "arnold-press", "name": "Arnold Press", "muscleGroup": "Shoulders", "secondaryMuscles": ["Triceps"], "equipment": "Dumbbell", "difficulty": "Intermediate", "instructions": "Start with palms facing you. Rotate and press simultaneously to lockout." },
-  { "id": "upright-row", "name": "Upright Row", "muscleGroup": "Shoulders", "secondaryMuscles": ["Traps", "Biceps"], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Pull bar up to chin level, leading with elbows. Keep bar close to body." },
-  { "id": "shrugs", "name": "Shrugs", "muscleGroup": "Shoulders", "secondaryMuscles": ["Traps"], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Hold dumbbells at sides. Shrug shoulders up toward ears, hold briefly, lower slowly." },
-  { "id": "barbell-curl", "name": "Barbell Curl", "muscleGroup": "Biceps", "secondaryMuscles": ["Forearms"], "equipment": "Barbell", "difficulty": "Beginner", "instructions": "Underhand grip. Curl bar from hip to shoulder level, keep elbows at sides." },
-  { "id": "dumbbell-curl", "name": "Dumbbell Curl", "muscleGroup": "Biceps", "secondaryMuscles": ["Forearms"], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Alternate or simultaneous curls. Supinate wrist at top of movement." },
-  { "id": "hammer-curl", "name": "Hammer Curl", "muscleGroup": "Biceps", "secondaryMuscles": ["Brachialis", "Forearms"], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Neutral grip (palms facing each other). Curl to shoulder height." },
-  { "id": "preacher-curl", "name": "Preacher Curl", "muscleGroup": "Biceps", "secondaryMuscles": [], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Rest arms on preacher pad. Curl bar up, lower slowly for maximum stretch." },
-  { "id": "concentration-curl", "name": "Concentration Curl", "muscleGroup": "Biceps", "secondaryMuscles": [], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Sit, rest elbow on inner thigh. Curl dumbbell to shoulder, squeeze at top." },
-  { "id": "cable-curl", "name": "Cable Curl", "muscleGroup": "Biceps", "secondaryMuscles": [], "equipment": "Cable", "difficulty": "Beginner", "instructions": "Stand facing low pulley. Curl handle up, maintaining constant tension." },
-  { "id": "tricep-pushdown", "name": "Tricep Pushdown", "muscleGroup": "Triceps", "secondaryMuscles": [], "equipment": "Cable", "difficulty": "Beginner", "instructions": "Stand at high pulley. Push handle down to full extension, elbows at sides." },
-  { "id": "skull-crusher", "name": "Skull Crusher", "muscleGroup": "Triceps", "secondaryMuscles": [], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Lie flat. Lower bar to forehead by bending elbows, then extend back up." },
-  { "id": "overhead-tricep-extension", "name": "Overhead Tricep Extension", "muscleGroup": "Triceps", "secondaryMuscles": [], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Hold dumbbell overhead. Lower behind head by bending elbows, then extend." },
-  { "id": "close-grip-bench-press", "name": "Close-Grip Bench Press", "muscleGroup": "Triceps", "secondaryMuscles": ["Chest"], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Grip bar shoulder-width or closer. Lower to chest, press focusing on triceps." },
-  { "id": "tricep-dips", "name": "Tricep Dips", "muscleGroup": "Triceps", "secondaryMuscles": ["Chest", "Shoulders"], "equipment": "Bodyweight", "difficulty": "Intermediate", "instructions": "Upright torso on parallel bars. Lower until elbows are 90°, press back up." },
-  { "id": "tricep-kickback", "name": "Tricep Kickback", "muscleGroup": "Triceps", "secondaryMuscles": [], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Hinge forward, upper arm parallel to floor. Extend forearm back to lockout." },
-  { "id": "barbell-squat", "name": "Barbell Squat", "muscleGroup": "Legs", "secondaryMuscles": ["Glutes", "Hamstrings", "Core"], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Bar on upper traps. Squat to at least parallel, keeping chest up and knees tracking toes." },
-  { "id": "front-squat", "name": "Front Squat", "muscleGroup": "Legs", "secondaryMuscles": ["Glutes", "Core"], "equipment": "Barbell", "difficulty": "Advanced", "instructions": "Bar on front delts. Upright torso, squat deep, drive elbows up." },
-  { "id": "leg-press", "name": "Leg Press", "muscleGroup": "Legs", "secondaryMuscles": ["Glutes", "Hamstrings"], "equipment": "Machine", "difficulty": "Beginner", "instructions": "Place feet shoulder-width on platform. Lower until knees form 90°, press back." },
-  { "id": "romanian-deadlift", "name": "Romanian Deadlift", "muscleGroup": "Legs", "secondaryMuscles": ["Glutes", "Lower Back"], "equipment": "Barbell", "difficulty": "Intermediate", "instructions": "Hip hinge with slight knee bend. Lower bar along legs feeling hamstring stretch, return to standing." },
-  { "id": "leg-curl", "name": "Leg Curl", "muscleGroup": "Legs", "secondaryMuscles": [], "equipment": "Machine", "difficulty": "Beginner", "instructions": "Lie face down. Curl heels toward glutes, squeeze at top, lower slowly." },
-  { "id": "leg-extension", "name": "Leg Extension", "muscleGroup": "Legs", "secondaryMuscles": [], "equipment": "Machine", "difficulty": "Beginner", "instructions": "Sit upright. Extend legs to full lockout, lower slowly." },
-  { "id": "bulgarian-split-squat", "name": "Bulgarian Split Squat", "muscleGroup": "Legs", "secondaryMuscles": ["Glutes", "Balance"], "equipment": "Dumbbell", "difficulty": "Intermediate", "instructions": "Rear foot elevated on bench. Squat front leg to 90°, drive through heel to stand." },
-  { "id": "hack-squat", "name": "Hack Squat", "muscleGroup": "Legs", "secondaryMuscles": ["Glutes"], "equipment": "Machine", "difficulty": "Intermediate", "instructions": "Feet low on platform. Squat until thighs parallel, drive back up." },
-  { "id": "lunges", "name": "Lunges", "muscleGroup": "Legs", "secondaryMuscles": ["Glutes", "Balance"], "equipment": "Dumbbell", "difficulty": "Beginner", "instructions": "Step forward, lower back knee toward floor. Return to standing, alternate legs." },
-  { "id": "calf-raise", "name": "Standing Calf Raise", "muscleGroup": "Legs", "secondaryMuscles": [], "equipment": "Machine", "difficulty": "Beginner", "instructions": "Stand with balls of feet on edge. Raise heels as high as possible, lower below starting point." },
-  { "id": "glute-bridge", "name": "Glute Bridge", "muscleGroup": "Legs", "secondaryMuscles": ["Hamstrings", "Core"], "equipment": "Bodyweight", "difficulty": "Beginner", "instructions": "Lie on back, feet flat. Drive hips up squeezing glutes at top, lower slowly." },
-  { "id": "plank", "name": "Plank", "muscleGroup": "Core", "secondaryMuscles": ["Shoulders", "Glutes"], "equipment": "Bodyweight", "difficulty": "Beginner", "instructions": "Forearms on floor, body straight. Hold position breathing steadily." },
-  { "id": "crunch", "name": "Crunch", "muscleGroup": "Core", "secondaryMuscles": [], "equipment": "Bodyweight", "difficulty": "Beginner", "instructions": "Lie on back, knees bent. Curl upper body toward knees, lower controlled." },
-  { "id": "leg-raise", "name": "Hanging Leg Raise", "muscleGroup": "Core", "secondaryMuscles": ["Hip Flexors"], "equipment": "Bodyweight", "difficulty": "Intermediate", "instructions": "Hang from bar. Raise straight legs to 90° (or higher), lower slowly." },
-  { "id": "russian-twist", "name": "Russian Twist", "muscleGroup": "Core", "secondaryMuscles": ["Obliques"], "equipment": "Bodyweight", "difficulty": "Beginner", "instructions": "Sit, feet off floor. Rotate torso side to side, touching floor each side." },
-  { "id": "ab-wheel-rollout", "name": "Ab Wheel Rollout", "muscleGroup": "Core", "secondaryMuscles": ["Shoulders", "Lats"], "equipment": "Bodyweight", "difficulty": "Advanced", "instructions": "Kneel, roll wheel forward until body is extended, pull back using core." },
-  { "id": "cable-crunch", "name": "Cable Crunch", "muscleGroup": "Core", "secondaryMuscles": [], "equipment": "Cable", "difficulty": "Beginner", "instructions": "Kneel at high pulley. Crunch rope to floor, keeping hips still." },
-  { "id": "mountain-climber", "name": "Mountain Climber", "muscleGroup": "Core", "secondaryMuscles": ["Cardio", "Shoulders"], "equipment": "Bodyweight", "difficulty": "Beginner", "instructions": "Push-up position. Drive alternating knees to chest rapidly." }
+  {
+    "id": "barbell-bench-press",
+    "name": "Barbell Bench Press",
+    "muscleGroup": "Chest",
+    "secondaryMuscles": [
+      "Triceps",
+      "Front Delts"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Lie flat on bench, grip bar shoulder-width apart. Lower bar to chest, then press back up.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0025-EIeI8Vf.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0025-EIeI8Vf.jpg",
+    "datasetId": "0025"
+  },
+  {
+    "id": "incline-dumbbell-press",
+    "name": "Incline Dumbbell Press",
+    "muscleGroup": "Chest",
+    "secondaryMuscles": [
+      "Triceps",
+      "Front Delts"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Intermediate",
+    "instructions": "Set bench to 30–45°. Press dumbbells up and slightly inward at top.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0314-ns0SIbU.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0314-ns0SIbU.jpg",
+    "datasetId": "0314"
+  },
+  {
+    "id": "decline-bench-press",
+    "name": "Decline Bench Press",
+    "muscleGroup": "Chest",
+    "secondaryMuscles": [
+      "Triceps"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Set bench to -15°. Lower bar to lower chest, press back up.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0033-GrO65fd.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0033-GrO65fd.jpg",
+    "datasetId": "0033"
+  },
+  {
+    "id": "cable-fly",
+    "name": "Cable Fly",
+    "muscleGroup": "Chest",
+    "secondaryMuscles": [
+      "Front Delts"
+    ],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "instructions": "Stand between cables set at shoulder height. With slight elbow bend, arc hands together.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0154-aqvSOQE.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0154-aqvSOQE.jpg",
+    "datasetId": "0154"
+  },
+  {
+    "id": "push-up",
+    "name": "Push-Up",
+    "muscleGroup": "Chest",
+    "secondaryMuscles": [
+      "Triceps",
+      "Core"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "instructions": "Hands shoulder-width apart. Lower chest to floor, press back up keeping core tight.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0662-I4hDWkc.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0662-I4hDWkc.jpg",
+    "datasetId": "0662"
+  },
+  {
+    "id": "chest-dips",
+    "name": "Chest Dips",
+    "muscleGroup": "Chest",
+    "secondaryMuscles": [
+      "Triceps",
+      "Shoulders"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Intermediate",
+    "instructions": "Lean forward on parallel bars. Dip until upper arms are parallel, press back up.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0251-9WTm7dq.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0251-9WTm7dq.jpg",
+    "datasetId": "0251"
+  },
+  {
+    "id": "dumbbell-pullover",
+    "name": "Dumbbell Pullover",
+    "muscleGroup": "Chest",
+    "secondaryMuscles": [
+      "Back",
+      "Triceps"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Intermediate",
+    "instructions": "Lie across bench. Hold dumbbell overhead, lower behind head then pull back.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0375-9XjtHvS.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0375-9XjtHvS.jpg",
+    "datasetId": "0375"
+  },
+  {
+    "id": "pull-up",
+    "name": "Pull-Up",
+    "muscleGroup": "Back",
+    "secondaryMuscles": [
+      "Biceps",
+      "Rear Delts"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Intermediate",
+    "instructions": "Hang from bar, palms facing away. Pull until chin clears bar, lower slowly.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0652-lBDjFxJ.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0652-lBDjFxJ.jpg",
+    "datasetId": "0652"
+  },
+  {
+    "id": "chin-up",
+    "name": "Chin-Up",
+    "muscleGroup": "Back",
+    "secondaryMuscles": [
+      "Biceps"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "instructions": "Hang from bar, palms facing you. Pull until chin clears bar.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1326-T2mxWqc.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/1326-T2mxWqc.jpg",
+    "datasetId": "1326"
+  },
+  {
+    "id": "barbell-row",
+    "name": "Barbell Row",
+    "muscleGroup": "Back",
+    "secondaryMuscles": [
+      "Biceps",
+      "Rear Delts"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Hinge forward 45°. Pull bar to lower chest, squeeze shoulder blades together.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0027-eZyBC3j.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0027-eZyBC3j.jpg",
+    "datasetId": "0027"
+  },
+  {
+    "id": "dumbbell-row",
+    "name": "Dumbbell Row",
+    "muscleGroup": "Back",
+    "secondaryMuscles": [
+      "Biceps"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Place knee and hand on bench. Row dumbbell to hip, keeping elbow close.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0293-BJ0Hz5L.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0293-BJ0Hz5L.jpg",
+    "datasetId": "0293"
+  },
+  {
+    "id": "lat-pulldown",
+    "name": "Lat Pulldown",
+    "muscleGroup": "Back",
+    "secondaryMuscles": [
+      "Biceps"
+    ],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "instructions": "Grip bar wide. Pull down to upper chest while leaning slightly back.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/2330-LEprlgG.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/2330-LEprlgG.jpg",
+    "datasetId": "2330"
+  },
+  {
+    "id": "seated-cable-row",
+    "name": "Seated Cable Row",
+    "muscleGroup": "Back",
+    "secondaryMuscles": [
+      "Biceps",
+      "Rear Delts"
+    ],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "instructions": "Sit upright. Pull handle to abdomen, squeezing shoulder blades at end.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1323-SJqRxOt.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/1323-SJqRxOt.jpg",
+    "datasetId": "1323"
+  },
+  {
+    "id": "deadlift",
+    "name": "Deadlift",
+    "muscleGroup": "Back",
+    "secondaryMuscles": [
+      "Glutes",
+      "Hamstrings",
+      "Traps"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Advanced",
+    "instructions": "Hip-width stance, bar over mid-foot. Drive hips forward as bar passes knees. Keep back neutral.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0032-ila4NZS.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0032-ila4NZS.jpg",
+    "datasetId": "0032"
+  },
+  {
+    "id": "t-bar-row",
+    "name": "T-Bar Row",
+    "muscleGroup": "Back",
+    "secondaryMuscles": [
+      "Biceps",
+      "Rear Delts"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Straddle bar, hinge forward. Pull bar to chest, squeezing back muscles.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1349-BgljGjd.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/1349-BgljGjd.jpg",
+    "datasetId": "1349"
+  },
+  {
+    "id": "face-pull",
+    "name": "Face Pull",
+    "muscleGroup": "Back",
+    "secondaryMuscles": [
+      "Rear Delts",
+      "Rotator Cuff"
+    ],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "instructions": "Set cable at face height. Pull rope to face while pulling elbows back and out."
+  },
+  {
+    "id": "overhead-press",
+    "name": "Overhead Press",
+    "muscleGroup": "Shoulders",
+    "secondaryMuscles": [
+      "Triceps",
+      "Upper Chest"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Stand with bar at collar-bone level. Press overhead to lockout, keep core braced.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0091-kTbSH9h.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0091-kTbSH9h.jpg",
+    "datasetId": "0091"
+  },
+  {
+    "id": "dumbbell-shoulder-press",
+    "name": "Dumbbell Shoulder Press",
+    "muscleGroup": "Shoulders",
+    "secondaryMuscles": [
+      "Triceps"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Sit or stand. Press dumbbells from ear level up to lockout.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0405-znQUdHY.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0405-znQUdHY.jpg",
+    "datasetId": "0405"
+  },
+  {
+    "id": "lateral-raise",
+    "name": "Lateral Raise",
+    "muscleGroup": "Shoulders",
+    "secondaryMuscles": [],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Slight elbow bend. Raise arms out to sides to shoulder height, control the descent.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0334-DsgkuIt.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0334-DsgkuIt.jpg",
+    "datasetId": "0334"
+  },
+  {
+    "id": "front-raise",
+    "name": "Front Raise",
+    "muscleGroup": "Shoulders",
+    "secondaryMuscles": [
+      "Upper Chest"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Raise dumbbells straight in front to shoulder height. Avoid swinging.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0310-3eGE2JC.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0310-3eGE2JC.jpg",
+    "datasetId": "0310"
+  },
+  {
+    "id": "rear-delt-fly",
+    "name": "Rear Delt Fly",
+    "muscleGroup": "Shoulders",
+    "secondaryMuscles": [
+      "Back"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Hinge forward 90°. Raise arms out to sides with slight elbow bend.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0378-8DiFDVA.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0378-8DiFDVA.jpg",
+    "datasetId": "0378"
+  },
+  {
+    "id": "arnold-press",
+    "name": "Arnold Press",
+    "muscleGroup": "Shoulders",
+    "secondaryMuscles": [
+      "Triceps"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Intermediate",
+    "instructions": "Start with palms facing you. Rotate and press simultaneously to lockout.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/2137-Xy4jlWA.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/2137-Xy4jlWA.jpg",
+    "datasetId": "2137"
+  },
+  {
+    "id": "upright-row",
+    "name": "Upright Row",
+    "muscleGroup": "Shoulders",
+    "secondaryMuscles": [
+      "Traps",
+      "Biceps"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Pull bar up to chin level, leading with elbows. Keep bar close to body.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0120-UDlhcO8.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0120-UDlhcO8.jpg",
+    "datasetId": "0120"
+  },
+  {
+    "id": "shrugs",
+    "name": "Shrugs",
+    "muscleGroup": "Shoulders",
+    "secondaryMuscles": [
+      "Traps"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Hold dumbbells at sides. Shrug shoulders up toward ears, hold briefly, lower slowly.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0406-NJzBsGJ.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0406-NJzBsGJ.jpg",
+    "datasetId": "0406"
+  },
+  {
+    "id": "barbell-curl",
+    "name": "Barbell Curl",
+    "muscleGroup": "Biceps",
+    "secondaryMuscles": [
+      "Forearms"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Beginner",
+    "instructions": "Underhand grip. Curl bar from hip to shoulder level, keep elbows at sides.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0031-25GPyDY.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0031-25GPyDY.jpg",
+    "datasetId": "0031"
+  },
+  {
+    "id": "dumbbell-curl",
+    "name": "Dumbbell Curl",
+    "muscleGroup": "Biceps",
+    "secondaryMuscles": [
+      "Forearms"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Alternate or simultaneous curls. Supinate wrist at top of movement.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0285-BU15nH4.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0285-BU15nH4.jpg",
+    "datasetId": "0285"
+  },
+  {
+    "id": "hammer-curl",
+    "name": "Hammer Curl",
+    "muscleGroup": "Biceps",
+    "secondaryMuscles": [
+      "Brachialis",
+      "Forearms"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Neutral grip (palms facing each other). Curl to shoulder height.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0313-slDvUAU.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0313-slDvUAU.jpg",
+    "datasetId": "0313"
+  },
+  {
+    "id": "preacher-curl",
+    "name": "Preacher Curl",
+    "muscleGroup": "Biceps",
+    "secondaryMuscles": [],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Rest arms on preacher pad. Curl bar up, lower slowly for maximum stretch.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0070-qOgPVf6.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0070-qOgPVf6.jpg",
+    "datasetId": "0070"
+  },
+  {
+    "id": "concentration-curl",
+    "name": "Concentration Curl",
+    "muscleGroup": "Biceps",
+    "secondaryMuscles": [],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Sit, rest elbow on inner thigh. Curl dumbbell to shoulder, squeeze at top.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0297-gvsWLQw.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0297-gvsWLQw.jpg",
+    "datasetId": "0297"
+  },
+  {
+    "id": "cable-curl",
+    "name": "Cable Curl",
+    "muscleGroup": "Biceps",
+    "secondaryMuscles": [],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "instructions": "Stand facing low pulley. Curl handle up, maintaining constant tension.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0868-G08RZcQ.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0868-G08RZcQ.jpg",
+    "datasetId": "0868"
+  },
+  {
+    "id": "tricep-pushdown",
+    "name": "Tricep Pushdown",
+    "muscleGroup": "Triceps",
+    "secondaryMuscles": [],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "instructions": "Stand at high pulley. Push handle down to full extension, elbows at sides.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0241-gAwDzB3.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0241-gAwDzB3.jpg",
+    "datasetId": "0241"
+  },
+  {
+    "id": "skull-crusher",
+    "name": "Skull Crusher",
+    "muscleGroup": "Triceps",
+    "secondaryMuscles": [],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Lie flat. Lower bar to forehead by bending elbows, then extend back up.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0060-h8LFzo9.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0060-h8LFzo9.jpg",
+    "datasetId": "0060"
+  },
+  {
+    "id": "overhead-tricep-extension",
+    "name": "Overhead Tricep Extension",
+    "muscleGroup": "Triceps",
+    "secondaryMuscles": [],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Hold dumbbell overhead. Lower behind head by bending elbows, then extend.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/2188-kont8Ut.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/2188-kont8Ut.jpg",
+    "datasetId": "2188"
+  },
+  {
+    "id": "close-grip-bench-press",
+    "name": "Close-Grip Bench Press",
+    "muscleGroup": "Triceps",
+    "secondaryMuscles": [
+      "Chest"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Grip bar shoulder-width or closer. Lower to chest, press focusing on triceps.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0030-J6Dx1Mu.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0030-J6Dx1Mu.jpg",
+    "datasetId": "0030"
+  },
+  {
+    "id": "tricep-dips",
+    "name": "Tricep Dips",
+    "muscleGroup": "Triceps",
+    "secondaryMuscles": [
+      "Chest",
+      "Shoulders"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Intermediate",
+    "instructions": "Upright torso on parallel bars. Lower until elbows are 90°, press back up.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0019-J60bN17.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0019-J60bN17.jpg",
+    "datasetId": "0019"
+  },
+  {
+    "id": "tricep-kickback",
+    "name": "Tricep Kickback",
+    "muscleGroup": "Triceps",
+    "secondaryMuscles": [],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Hinge forward, upper arm parallel to floor. Extend forearm back to lockout.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0333-W6PxUkg.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0333-W6PxUkg.jpg",
+    "datasetId": "0333"
+  },
+  {
+    "id": "barbell-squat",
+    "name": "Barbell Squat",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [
+      "Glutes",
+      "Hamstrings",
+      "Core"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Bar on upper traps. Squat to at least parallel, keeping chest up and knees tracking toes.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0043-qXTaZnJ.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0043-qXTaZnJ.jpg",
+    "datasetId": "0043"
+  },
+  {
+    "id": "front-squat",
+    "name": "Front Squat",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [
+      "Glutes",
+      "Core"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Advanced",
+    "instructions": "Bar on front delts. Upright torso, squat deep, drive elbows up.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0029-qi996YS.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0029-qi996YS.jpg",
+    "datasetId": "0029"
+  },
+  {
+    "id": "leg-press",
+    "name": "Leg Press",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [
+      "Glutes",
+      "Hamstrings"
+    ],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "instructions": "Place feet shoulder-width on platform. Lower until knees form 90°, press back.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/2287-V07qpXy.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/2287-V07qpXy.jpg",
+    "datasetId": "2287"
+  },
+  {
+    "id": "romanian-deadlift",
+    "name": "Romanian Deadlift",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [
+      "Glutes",
+      "Lower Back"
+    ],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "instructions": "Hip hinge with slight knee bend. Lower bar along legs feeling hamstring stretch, return to standing.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0085-wQ2c4XD.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0085-wQ2c4XD.jpg",
+    "datasetId": "0085"
+  },
+  {
+    "id": "leg-curl",
+    "name": "Leg Curl",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "instructions": "Lie face down. Curl heels toward glutes, squeeze at top, lower slowly.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0586-17lJ1kr.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0586-17lJ1kr.jpg",
+    "datasetId": "0586"
+  },
+  {
+    "id": "leg-extension",
+    "name": "Leg Extension",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "instructions": "Sit upright. Extend legs to full lockout, lower slowly.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0585-my33uHU.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0585-my33uHU.jpg",
+    "datasetId": "0585"
+  },
+  {
+    "id": "bulgarian-split-squat",
+    "name": "Bulgarian Split Squat",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [
+      "Glutes",
+      "Balance"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Intermediate",
+    "instructions": "Rear foot elevated on bench. Squat front leg to 90°, drive through heel to stand.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0098-W31mMjd.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0098-W31mMjd.jpg",
+    "datasetId": "0098"
+  },
+  {
+    "id": "hack-squat",
+    "name": "Hack Squat",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [
+      "Glutes"
+    ],
+    "equipment": "Machine",
+    "difficulty": "Intermediate",
+    "instructions": "Feet low on platform. Squat until thighs parallel, drive back up.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0046-5VCj6iH.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0046-5VCj6iH.jpg",
+    "datasetId": "0046"
+  },
+  {
+    "id": "lunges",
+    "name": "Lunges",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [
+      "Glutes",
+      "Balance"
+    ],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "instructions": "Step forward, lower back knee toward floor. Return to standing, alternate legs.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0336-RRWFUcw.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0336-RRWFUcw.jpg",
+    "datasetId": "0336"
+  },
+  {
+    "id": "calf-raise",
+    "name": "Standing Calf Raise",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "instructions": "Stand with balls of feet on edge. Raise heels as high as possible, lower below starting point.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/1373-bJYHBIN.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/1373-bJYHBIN.jpg",
+    "datasetId": "1373"
+  },
+  {
+    "id": "glute-bridge",
+    "name": "Glute Bridge",
+    "muscleGroup": "Legs",
+    "secondaryMuscles": [
+      "Hamstrings",
+      "Core"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "instructions": "Lie on back, feet flat. Drive hips up squeezing glutes at top, lower slowly.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/3561-GibBPPg.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/3561-GibBPPg.jpg",
+    "datasetId": "3561"
+  },
+  {
+    "id": "plank",
+    "name": "Plank",
+    "muscleGroup": "Core",
+    "secondaryMuscles": [
+      "Shoulders",
+      "Glutes"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "instructions": "Forearms on floor, body straight. Hold position breathing steadily.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0464-CosupLu.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0464-CosupLu.jpg",
+    "datasetId": "0464"
+  },
+  {
+    "id": "crunch",
+    "name": "Crunch",
+    "muscleGroup": "Core",
+    "secondaryMuscles": [],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "instructions": "Lie on back, knees bent. Curl upper body toward knees, lower controlled.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0274-TFqbd8t.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0274-TFqbd8t.jpg",
+    "datasetId": "0274"
+  },
+  {
+    "id": "leg-raise",
+    "name": "Hanging Leg Raise",
+    "muscleGroup": "Core",
+    "secondaryMuscles": [
+      "Hip Flexors"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Intermediate",
+    "instructions": "Hang from bar. Raise straight legs to 90° (or higher), lower slowly.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0472-I3tsCnC.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0472-I3tsCnC.jpg",
+    "datasetId": "0472"
+  },
+  {
+    "id": "russian-twist",
+    "name": "Russian Twist",
+    "muscleGroup": "Core",
+    "secondaryMuscles": [
+      "Obliques"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "instructions": "Sit, feet off floor. Rotate torso side to side, touching floor each side.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0687-XVDdcoj.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0687-XVDdcoj.jpg",
+    "datasetId": "0687"
+  },
+  {
+    "id": "ab-wheel-rollout",
+    "name": "Ab Wheel Rollout",
+    "muscleGroup": "Core",
+    "secondaryMuscles": [
+      "Shoulders",
+      "Lats"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Advanced",
+    "instructions": "Kneel, roll wheel forward until body is extended, pull back using core.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0857-NAgVB3t.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0857-NAgVB3t.jpg",
+    "datasetId": "0857"
+  },
+  {
+    "id": "cable-crunch",
+    "name": "Cable Crunch",
+    "muscleGroup": "Core",
+    "secondaryMuscles": [],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "instructions": "Kneel at high pulley. Crunch rope to floor, keeping hips still.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0175-WW95auq.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0175-WW95auq.jpg",
+    "datasetId": "0175"
+  },
+  {
+    "id": "mountain-climber",
+    "name": "Mountain Climber",
+    "muscleGroup": "Core",
+    "secondaryMuscles": [
+      "Cardio",
+      "Shoulders"
+    ],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "instructions": "Push-up position. Drive alternating knees to chest rapidly.",
+    "gifUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/videos/0630-RJgzwny.gif",
+    "thumbnailUrl": "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/images/0630-RJgzwny.jpg",
+    "datasetId": "0630"
+  }
 ]

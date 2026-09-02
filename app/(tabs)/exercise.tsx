@@ -1,31 +1,31 @@
 import MuscleMap from '@/components/exercise/MuscleMap';
-import { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  Alert,
-  StatusBar,
-  TextInput,
-} from 'react-native';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '@/lib/context/AuthContext';
-import {
-  getWorkoutSessions,
-  createWorkoutSession,
-  addWorkoutSets,
-  deleteWorkoutSession,
-  getExerciseProgress,
-} from '@/lib/queries/exercise';
+import ProgressChart from '@/components/exercise/ProgressChart';
 import SplitCard from '@/components/exercise/SplitCard';
 import WorkoutSession from '@/components/exercise/WorkoutSession';
-import ProgressChart from '@/components/exercise/ProgressChart';
+import { useAuth } from '@/lib/context/AuthContext';
 import { WORKOUT_SPLITS } from '@/lib/data/splits';
+import {
+  addWorkoutSets,
+  createWorkoutSession,
+  deleteWorkoutSession,
+  getExerciseProgress,
+  getWorkoutSessions,
+} from '@/lib/queries/exercise';
 import type { ActiveExercise, WorkoutSplit } from '@/lib/types';
+import { Ionicons } from '@expo/vector-icons';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useCallback, useState } from 'react';
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 type Tab = 'splits' | 'history' | 'progress';
 

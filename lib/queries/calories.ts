@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import type { FoodLog, NewFoodLog, MacroSummary, DailyCalories } from '../types';
+import type { DailyCalories, FoodLog, MacroSummary, NewFoodLog } from '../types';
 
 export async function getFoodLogs(userId: string, date: string): Promise<FoodLog[]> {
   const { data, error } = await supabase
@@ -67,20 +67,59 @@ export async function getWeeklyCalories(userId: string): Promise<DailyCalories[]
   }));
 }
 
-export async function searchOpenFoodFacts(query: string) {
-  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15&fields=id,product_name,brands,nutriments,image_small_url`;
-  const res = await fetch(url);
-  const json = await res.json();
-  return (json.products ?? [])
-    .filter((p: any) => p.product_name && p.nutriments?.['energy-kcal_100g'])
-    .map((p: any) => ({
-      id: p.id ?? p.code ?? Math.random().toString(),
-      product_name: p.product_name ?? 'Unknown',
-      brands: p.brands ?? '',
-      energy_kcal_100g: Math.round(p.nutriments['energy-kcal_100g'] ?? 0),
-      proteins_100g: Math.round((p.nutriments['proteins_100g'] ?? 0) * 10) / 10,
-      carbohydrates_100g: Math.round((p.nutriments['carbohydrates_100g'] ?? 0) * 10) / 10,
-      fat_100g: Math.round((p.nutriments['fat_100g'] ?? 0) * 10) / 10,
-      image_small_url: p.image_small_url,
-    }));
+// ─── Session-level search cache ───────────────────────────────────────────────
+// Same query within an app session returns instantly without hitting the network
+const searchCache = new Map<string, { results: any[]; ts: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+export async function searchOpenFoodFacts(query: string, signal?: AbortSignal) {
+  const key = query.toLowerCase().trim();
+
+  // Return from cache if fresh
+  const cached = searchCache.get(key);
+  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+    return cached.results;
+  }
+
+  // 5-second timeout — never leave the user waiting longer
+  const timeoutId = setTimeout(() => {
+    if (signal && !signal.aborted) (signal as any)._timedOut = true;
+  }, 5000);
+
+  const params = new URLSearchParams({
+    search_terms: query,
+    search_simple: '1',
+    action: 'process',
+    json: '1',
+    page_size: '10',
+    sort_by: 'unique_scans_n',   // most-scanned = most popular = better results
+    fields: 'id,code,product_name,brands,nutriments,image_small_url',
+  });
+
+  try {
+    const res = await fetch(
+      `https://world.openfoodfacts.org/cgi/search.pl?${params}`,
+      { signal }
+    );
+    const json = await res.json();
+
+    const results = (json.products ?? [])
+      .filter((p: any) => p.product_name && p.nutriments?.['energy-kcal_100g'])
+      .map((p: any) => ({
+        id: p.code ?? p.id ?? Math.random().toString(),
+        product_name: p.product_name ?? 'Unknown',
+        brands: p.brands ?? '',
+        energy_kcal_100g: Math.round(p.nutriments['energy-kcal_100g'] ?? 0),
+        proteins_100g: Math.round((p.nutriments['proteins_100g'] ?? 0) * 10) / 10,
+        carbohydrates_100g: Math.round((p.nutriments['carbohydrates_100g'] ?? 0) * 10) / 10,
+        fat_100g: Math.round((p.nutriments['fat_100g'] ?? 0) * 10) / 10,
+        image_small_url: p.image_small_url,
+      }));
+
+    // Store in cache
+    searchCache.set(key, { results, ts: Date.now() });
+    return results;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }

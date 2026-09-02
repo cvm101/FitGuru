@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Alert,
   Vibration,
   Platform,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +17,27 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import exercisesData from '@/lib/data/exercises.json';
 import type { ActiveExercise, ActiveSet, Exercise } from '@/lib/types';
 import ExerciseSearch from './ExerciseSearch';
+
+// ─── Isolated GIF panel ──────────────────────────────────────────────────────
+// Wrapped in memo so parent re-renders (timers, set state) never touch this
+// component — that's what caused the flicker / GIF restart.
+const ExerciseGifPanel = memo(({ gifUrl, name }: { gifUrl: string; name: string }) => {
+  return (
+    <View style={{ backgroundColor: '#0F172A', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#1E293B' }}>
+      {/* Dark container acts as placeholder while GIF loads — no flash */}
+      <View style={{ width: 180, height: 180, borderRadius: 12, overflow: 'hidden', backgroundColor: '#1E293B' }}>
+        <Image
+          source={{ uri: gifUrl }}
+          style={{ width: 180, height: 180 }}
+          resizeMode="cover"
+          fadeDuration={200}
+        />
+      </View>
+      <Text style={{ color: 'white', fontWeight: '700', fontSize: 13, marginTop: 10 }}>{name}</Text>
+      <Text style={{ color: '#475569', fontSize: 10, marginTop: 2 }}>© Gym Visual · exercise demo</Text>
+    </View>
+  );
+});
 
 const ALL_EXERCISES: Exercise[] = exercisesData as Exercise[];
 
@@ -44,6 +66,8 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
   const [exercises, setExercises] = useState<ActiveExercise[]>([]);
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Which exercise card has its GIF demo panel open
+  const [expandedGifId, setExpandedGifId] = useState<string | null>(null);
 
   // Workout timer
   const startTimeRef = useRef(Date.now());
@@ -76,6 +100,8 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
             id: generateId(),
             name: found?.name ?? name,
             muscleGroup: found?.muscleGroup ?? 'General',
+            gifUrl: found?.gifUrl,
+            thumbnailUrl: found?.thumbnailUrl,
             sets: [{ id: generateId(), weight: '', reps: '', rpe: '', done: false }],
           };
         });
@@ -128,7 +154,14 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
   // Exercise management
   function addExercise(ex: Exercise) {
     const set: ActiveSet = { id: generateId(), weight: '', reps: '', rpe: '', done: false };
-    setExercises((prev) => [...prev, { id: generateId(), name: ex.name, muscleGroup: ex.muscleGroup, sets: [set] }]);
+    setExercises((prev) => [...prev, {
+      id: generateId(),
+      name: ex.name,
+      muscleGroup: ex.muscleGroup,
+      gifUrl: ex.gifUrl,
+      thumbnailUrl: ex.thumbnailUrl,
+      sets: [set],
+    }]);
     setShowExerciseSearch(false);
   }
 
@@ -291,15 +324,57 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
           {exercises.map((ex) => (
             <View key={ex.id} style={{ backgroundColor: 'white', borderRadius: 20, marginBottom: 12, overflow: 'hidden', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
               {/* Exercise header */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#0F172A', fontWeight: '700', fontSize: 14 }}>{ex.name}</Text>
-                  <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 1 }}>{ex.muscleGroup}</Text>
+              <TouchableOpacity
+                onPress={() => setExpandedGifId(expandedGifId === ex.id ? null : ex.id)}
+                activeOpacity={0.7}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
+                  {/* Thumbnail or muscle-group icon */}
+                  {ex.thumbnailUrl ? (
+                    <Image
+                      source={{ uri: ex.thumbnailUrl }}
+                      style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: '#F1F5F9' }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="barbell-outline" size={18} color="#6366F1" />
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#0F172A', fontWeight: '700', fontSize: 14 }}>{ex.name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <Text style={{ color: '#94A3B8', fontSize: 11 }}>{ex.muscleGroup}</Text>
+                      {ex.gifUrl && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                          <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: '#CBD5E1' }} />
+                          <Text style={{ color: '#6366F1', fontSize: 10, fontWeight: '600' }}>
+                            {expandedGifId === ex.id ? 'Hide demo' : 'See demo'}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
                 </View>
-                <TouchableOpacity onPress={() => removeExercise(ex.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                </TouchableOpacity>
-              </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  {ex.gifUrl && (
+                    <Ionicons
+                      name={expandedGifId === ex.id ? 'chevron-up' : 'play-circle-outline'}
+                      size={18}
+                      color="#6366F1"
+                    />
+                  )}
+                  <TouchableOpacity onPress={() => removeExercise(ex.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+
+              {/* GIF Demo panel — expands when you tap the exercise header */}
+              {expandedGifId === ex.id && ex.gifUrl && (
+                <ExerciseGifPanel gifUrl={ex.gifUrl} name={ex.name} />
+              )}
 
               {/* Column headers */}
               <View style={{ flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 6, backgroundColor: '#F8FAFC' }}>
