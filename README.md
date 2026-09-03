@@ -2,7 +2,11 @@
 
 > A professional cross-platform health & fitness mobile app for iOS and Android — built with React Native (Expo), Supabase, and open-source nutrition & exercise data.
 
-![License](https://img.shields.io/badge/license-MIT-green) ![Expo](https://img.shields.io/badge/Expo-SDK%2057-blue) ![Supabase](https://img.shields.io/badge/backend-Supabase-3ECF8E) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Expo](https://img.shields.io/badge/Expo-SDK%2057-blue)
+![Supabase](https://img.shields.io/badge/backend-Supabase-3ECF8E)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
+![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB)
 
 ---
 
@@ -11,14 +15,15 @@
 1. [Overview](#overview)
 2. [Architecture](#architecture)
 3. [User Flow](#user-flow)
-4. [Data Flow](#data-flow)
-5. [Database Schema](#database-schema)
-6. [Features](#features)
-7. [Tech Stack](#tech-stack)
-8. [Project Structure](#project-structure)
-9. [Setup Guide](#setup-guide)
-10. [Workout Splits](#workout-splits)
-11. [Data Sources](#data-sources)
+4. [Food Search Flow](#food-search-flow)
+5. [Workout Logging Flow](#workout-logging-flow)
+6. [Database Schema](#database-schema)
+7. [Features](#features)
+8. [Tech Stack](#tech-stack)
+9. [Project Structure](#project-structure)
+10. [Setup Guide](#setup-guide)
+11. [Workout Splits](#workout-splits)
+12. [Data Sources](#data-sources)
 
 ---
 
@@ -29,14 +34,14 @@ CaloriTracker is a full-featured personal health companion that combines nutriti
 **Core capabilities:**
 
 - 🍎 Track daily **calorie & macro intake** across 4 meal types with a searchable food diary
-- 🔍 Instant food search powered by **Open Food Facts** (3M+ products, no API key)
+- ⚡ **Instant food search** — searches a local Supabase DB of 256 Indian & global foods first, falls back to Open Food Facts and auto-saves results
 - 💪 Follow structured **workout splits** (PPL, Upper/Lower, Arnold, Full Body, and more)
 - 📋 Pre-loaded exercise lists per split day — start logging immediately, no manual searching
 - ⏱️ **Live workout logger** with set/rep/weight/RPE tracking and an auto-start rest timer
 - ⚖️ **Body weight tracking** with a smooth trend chart and goal weight line
 - 🗓️ **Activity heatmap** — GitHub-style 26-week training calendar
 - 🧠 **1RM Calculator** (Epley formula) with percentage breakdown by training goal
-- 💡 **Muscle map** — front/back SVG body diagram shaded by weekly training volume
+- 🗺️ **Muscle map** — front/back SVG body diagram shaded by weekly training volume
 - 📈 **Strength progress charts** per exercise with personal record badges
 
 All data is stored in your own **Supabase PostgreSQL** instance with Row-Level Security — nobody else can see your data.
@@ -45,286 +50,241 @@ All data is stored in your own **Supabase PostgreSQL** instance with Row-Level S
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                       CaloriTracker Mobile App                           │
-│                        React Native · Expo SDK 57                        │
-│                                                                          │
-│  ┌───────────────┐  ┌──────────────┐  ┌─────────────┐  ┌─────────────┐ │
-│  │  Auth Screens │  │  Dashboard   │  │  Calories   │  │  Exercise   │ │
-│  │               │  │              │  │             │  │             │ │
-│  │  • Login      │  │  • Calorie   │  │  • Food     │  │  • Programs │ │
-│  │  • Register   │  │    ring      │  │    diary    │  │    (splits) │ │
-│  │  • Onboarding │  │  • Macros    │  │  • Search   │  │  • Logger   │ │
-│  │               │  │  • Chart     │  │    modal    │  │  • History  │ │
-│  └───────┬───────┘  │  • Targets   │  │             │  │  • Progress │ │
-│          │          └──────┬───────┘  └──────┬──────┘  └──────┬──────┘ │
-│          │                 │                 │                 │        │
-│  ┌───────▼─────────────────▼─────────────────▼─────────────────▼──────┐ │
-│  │                   Expo Router (File-based Navigation)              │ │
-│  │              app/(auth)/  ·  app/(tabs)/  ·  AuthGate             │ │
-│  └─────────────────────────────────┬──────────────────────────────────┘ │
-│                                    │                                     │
-│  ┌─────────────────────────────────▼──────────────────────────────────┐ │
-│  │                        State & Data Layer                          │ │
-│  │                                                                    │ │
-│  │  ┌───────────────────┐          ┌──────────────────────────────┐   │ │
-│  │  │   Auth Context    │          │     TanStack Query Cache     │   │ │
-│  │  │  (Supabase        │          │  stale-while-revalidate      │   │ │
-│  │  │   session +       │          │  optimistic updates          │   │ │
-│  │  │   user profile)   │          │  background refetch          │   │ │
-│  │  └────────┬──────────┘          └────────────┬─────────────────┘   │ │
-│  │           │                                  │                     │ │
-│  │  ┌────────▼──────────────────────────────────▼─────────────────┐   │ │
-│  │  │                    lib/queries/                             │   │ │
-│  │  │  calories.ts   food_logs · macros · weekly stats           │   │ │
-│  │  │  exercise.ts   sessions · sets · progress                  │   │ │
-│  │  │  bodyweight.ts weight logs · latest weight                 │   │ │
-│  │  └──────────────────────────────┬──────────────────────────────┘   │ │
-│  └────────────────────────────────-┼────────────────────────────────────┘ │
-└────────────────────────────────────┼─────────────────────────────────────┘
-                                     │
-             ┌───────────────────────▼──────────────────────┐
-             │              Supabase Client                  │
-             │            (lib/supabase.ts)                  │
-             │   AsyncStorage · autoRefreshToken · no SSR    │
-             └───────────────┬──────────────┬───────────────┘
-                             │              │
-              ┌──────────────▼────┐  ┌──────▼────────────────────┐
-              │  Supabase Auth    │  │  Supabase Database        │
-              │                   │  │  PostgreSQL + RLS         │
-              │  • JWT tokens     │  │                           │
-              │  • Email/password │  │  profiles                 │
-              │  • Auto-refresh   │  │  food_logs                │
-              │  • Persist        │  │  body_weight_logs         │
-              │    (AsyncStorage) │  │  workout_sessions         │
-              └───────────────────┘  │  workout_sets (+rpe)      │
-                                     └───────────────────────────┘
+```mermaid
+graph TD
+    subgraph Mobile["📱 Mobile App · React Native · Expo SDK 57"]
+        direction TB
+        Auth["Auth Screens\n(Login · Register · Onboarding)"]
+        Tabs["Tab Navigation · Expo Router"]
+        Dashboard["Dashboard\nCalorie ring · Macros · Weekly chart"]
+        Calories["Calories\nFood diary · Search modal · Date nav"]
+        Exercise["Exercise\nPrograms · Logger · History · Progress"]
+        Profile["Profile\nBody weight · Heatmap · Goals"]
+    end
 
-              ┌────────────────────────────────────────────────┐
-              │           External Data (read-only)            │
-              │                                                │
-              │  Open Food Facts API  · 3M+ products           │
-              │  free-exercise-db     · 55 exercises (bundled) │
-              └────────────────────────────────────────────────┘
+    subgraph State["State & Data Layer"]
+        AuthCtx["AuthContext\nSupabase session + user profile"]
+        TQ["TanStack Query\nCache · Background refetch · Mutations"]
+        Queries["lib/queries/\ncalories.ts · exercise.ts · bodyweight.ts"]
+    end
+
+    subgraph Backend["☁️ Supabase"]
+        SupaAuth["Auth\nJWT · Email/Password · Auto-refresh"]
+        DB["PostgreSQL\nRow-Level Security"]
+        FoodsDB["foods table\n256 Indian + global foods"]
+    end
+
+    subgraph External["🌐 External APIs"]
+        OFF["Open Food Facts\n3M+ products · fallback only"]
+    end
+
+    Auth --> Tabs
+    Tabs --> Dashboard & Calories & Exercise & Profile
+    Dashboard & Calories & Exercise & Profile --> TQ
+    TQ --> Queries
+    Queries --> AuthCtx
+    Queries --> SupaAuth & DB
+    Calories -->|"search"| FoodsDB
+    FoodsDB -->|"miss → fallback"| OFF
+    OFF -->|"auto-save"| FoodsDB
 ```
 
 ---
 
 ## User Flow
 
-```
-  App Launch
-      │
-      ▼
-  ┌─────────────────────┐     No session    ┌──────────────────────────┐
-  │  Root AuthGate      │ ────────────────▶ │       (auth) group       │
-  │  checks Supabase    │                   │                          │
-  │  session            │                   │  Login  ──▶  Register    │
-  └─────────────────────┘                   │                 │        │
-            │                               │            Onboarding    │
-     Has session                            │  (goals + body stats)    │
-            │                               └──────────────┬───────────┘
-            └──────────────────────────────────────────────┘
-                                   │
-                                   ▼
-                       ┌───────────────────────┐
-                       │     (tabs) group       │
-                       │  Bottom navigation     │
-                       └───────────┬────────────┘
-                                   │
-       ┌───────────────────────────┼──────────────────────────┐
-       │               │           │                          │
-       ▼               ▼           ▼                          ▼
-┌────────────┐  ┌──────────────┐  ┌────────────────┐  ┌──────────────┐
-│ Dashboard  │  │  Calories    │  │   Exercise     │  │   Profile    │
-│            │  │              │  │                │  │              │
-│ Calorie    │  │ Date picker  │  │ Programs tab   │  │ Avatar +     │
-│ ring +     │  │ Calorie bar  │  │  • Split cards │  │ stats        │
-│ macros     │  │ Breakfast    │  │  • Start day   │  │              │
-│            │  │ Lunch        │  │  • Pre-loaded  │  │ Body weight  │
-│ Gradient   │  │ Dinner       │  │    exercises   │  │ chart +      │
-│ quick      │  │ Snacks       │  │                │  │ goal line    │
-│ actions    │  │              │  │ History tab    │  │              │
-│            │  │ + Food       │  │  • Past        │  │ Heatmap      │
-│ Weekly     │  │   Search     │  │    sessions    │  │ calendar     │
-│ chart      │  │   Modal      │  │  • Stats       │  │              │
-│            │  │  (OFF API)   │  │                │  │ Goals +      │
-│ Nutrient   │  │              │  │ Progress tab   │  │ body stats   │
-│ targets    │  │              │  │  • 1RM calc    │  │              │
-│            │  │              │  │  • Muscle map  │  │ Data sources │
-└────────────┘  └──────────────┘  │  • PR badges   │  └──────────────┘
-                                  │  • Charts      │
-                                  └────────────────┘
+```mermaid
+flowchart TD
+    Launch([App Launch]) --> AuthGate{Supabase\nsession?}
+
+    AuthGate -->|No session| AuthGroup["Auth Group"]
+    AuthGroup --> Login["Login"]
+    AuthGroup --> Register["Register"]
+    Register --> Onboarding["Onboarding\nGoals + Body Stats"]
+    Login & Onboarding --> TabGroup
+
+    AuthGate -->|Has session| TabGroup["Tab Navigation"]
+
+    TabGroup --> T1["🏠 Dashboard"]
+    TabGroup --> T2["🍎 Calories"]
+    TabGroup --> T3["💪 Exercise"]
+    TabGroup --> T4["👤 Profile"]
+
+    T1 --> D1["Calorie ring\nMacro grid\nWeekly chart"]
+
+    T2 --> C1["Date picker\nMeal sections\nFood diary"]
+    C1 --> C2["+ Add Food\nSearch modal"]
+    C2 --> C3{"Found in\nlocal DB?"}
+    C3 -->|"Yes · instant"| C4["Show results"]
+    C3 -->|"No · fallback"| C5["Open Food Facts API"]
+    C5 --> C4
+
+    T3 --> E1["Programs tab\nSplit cards"]
+    E1 --> E2["Start Day\nPre-loaded exercises"]
+    E2 --> E3["Live Workout Logger\nSets · Reps · Weight · RPE"]
+    E3 --> E4["Rest timer auto-starts\nScreen stays awake"]
+    E3 --> E5["Finish → saved to Supabase"]
+
+    T4 --> P1["Body stats · BMI"]
+    T4 --> P2["Body weight chart\nLog weight"]
+    T4 --> P3["26-week heatmap"]
+    T4 --> P4["Goals · Calories · Macros"]
 ```
 
 ---
 
-## Data Flow
+## Food Search Flow
 
+```mermaid
+sequenceDiagram
+    actor User
+    participant App as FoodSearchModal
+    participant Cache as In-Memory Cache
+    participant Local as Supabase foods table
+    participant OFF as Open Food Facts API
+
+    User->>App: Types query (debounce 400ms)
+    App->>Cache: Check session cache
+    alt Cache hit (< 5 min old)
+        Cache-->>App: Return instantly ⚡
+    else Cache miss
+        App->>Local: Full-text search (search_vec)
+        Local-->>App: Results (< 100ms)
+        alt 3 or more results found
+            App-->>User: Show results instantly ⚡
+        else Fewer than 3 results
+            App->>OFF: Fetch (world.openfoodfacts.org)
+            Note over App,OFF: 5-second hard timeout
+            OFF-->>App: Products list
+            App->>Local: Auto-save new foods (background)
+            App-->>User: Show merged results
+        end
+        App->>Cache: Store results (5 min TTL)
+    end
+    alt Timeout (> 5s)
+        App-->>User: Show Retry button
+    end
 ```
-  ┌─────────────────────────────────────────────────────────────┐
-  │                    FOOD LOGGING FLOW                        │
-  └─────────────────────────────────────────────────────────────┘
 
-  User types "chicken breast"
-          │
-          ▼
-  FoodSearchModal  ──▶  searchOpenFoodFacts()
-                                │
-                    GET world.openfoodfacts.org
-                    /cgi/search.pl?search_terms=...
-                                │
-                    Filter: must have product_name
-                            + energy-kcal_100g
-                    Map: normalise, round values
-                                │
-                    Results list (≤15 items)
-                                │
-  User picks item, enters grams (default 100g)
-                                │
-                    Scale: value = (per100g × grams) / 100
-                                │
-  addFoodLog() ──▶  Supabase food_logs
-                    (user_id, date, meal_type,
-                     calories, protein_g, carbs_g, fat_g)
-                                │
-  TanStack invalidates  ──▶  UI re-renders with new totals
+---
 
+## Workout Logging Flow
 
-  ┌─────────────────────────────────────────────────────────────┐
-  │                   WORKOUT LOGGING FLOW                      │
-  └─────────────────────────────────────────────────────────────┘
-
-  User selects split + day  ──▶  Start Session
-          │
-          │  Exercises pre-loaded from split definition
-          │  (no manual searching needed)
-          │
-  WorkoutSession modal opens
-  • expo-keep-awake: screen stays on
-  • Workout timer starts
-  │
-  User logs sets → reps → weight → RPE (optional)
-          │
-  Tick ✓ on set  ──▶  Rest timer auto-starts (60/90/120/180s)
-                       Vibrates when rest ends
-          │
-  "Finish Workout" pressed
-          │
-  createWorkoutSession()  ──▶  Supabase workout_sessions
-  addWorkoutSets()        ──▶  Supabase workout_sets
-                               (incl. rpe column)
-          │
-  TanStack invalidates  ──▶  Dashboard + History + Muscle map update
-
-
-  ┌─────────────────────────────────────────────────────────────┐
-  │                 BODY WEIGHT TRACKING FLOW                   │
-  └─────────────────────────────────────────────────────────────┘
-
-  Profile screen  ──▶  "+ Log weight" button
-          │
-  Modal: enter kg value
-          │
-  upsertBodyWeight()  ──▶  Supabase body_weight_logs
-                            (upsert on user_id + date —
-                             only one entry per day)
-          │
-  Chart re-renders  ──▶  New point on trend line
-                          Goal line shows distance to target
-
-
-  ┌─────────────────────────────────────────────────────────────┐
-  │                  AUTHENTICATION FLOW                        │
-  └─────────────────────────────────────────────────────────────┘
-
-  signUp(email, password)  ──▶  supabase.auth.signUp()
-          │                     Creates auth.users record
-          ▼
-  Onboarding (name, goals, body stats)
-          │
-  saveProfile()  ──▶  Supabase profiles (upsert)
-          │
-  AuthContext broadcasts session  ──▶  AuthGate redirects to tabs
+```mermaid
+flowchart LR
+    A([User selects\nSplit + Day]) --> B["WorkoutSession opens\nPre-loaded exercises"]
+    B --> C["expo-keep-awake\nScreen stays on"]
+    B --> D["Workout timer\nstarts"]
+    D --> E["Log set:\nReps · Weight · RPE"]
+    E --> F["Tick ✓ set done"]
+    F --> G["Rest timer\nauto-starts"]
+    G --> H{Rest\ndone?}
+    H -->|Vibrate alert| E
+    E --> I{More\nexercises?}
+    I -->|Yes| E
+    I -->|No| J["Finish Workout"]
+    J --> K["createWorkoutSession()\naddWorkoutSets()"]
+    K --> L[("Supabase\nworkout_sessions\nworkout_sets")]
+    L --> M["TanStack Query\ninvalidates"]
+    M --> N["Dashboard\nHistory\nMuscle map\n— all update"]
 ```
 
 ---
 
 ## Database Schema
 
-```
-  ┌────────────────────────────────────────────────────────┐
-  │               auth.users  (Supabase managed)           │
-  │  id UUID · email · created_at · ...                    │
-  └───────────────────────┬────────────────────────────────┘
-                          │ 1 : 1
-          ┌───────────────▼──────────────────────────────────┐
-          │                   profiles                        │
-          ├──────────────────────────────────────────────────┤
-          │  id            UUID  PK                          │
-          │  user_id       UUID  FK auth.users (unique)      │
-          │  name          TEXT                              │
-          │  age           INT                               │
-          │  height_cm     NUMERIC                           │
-          │  weight_kg     NUMERIC   (goal / current weight) │
-          │  goal_calories INT       DEFAULT 2000            │
-          │  goal_protein  INT       DEFAULT 150             │
-          │  goal_carbs    INT       DEFAULT 250             │
-          │  goal_fat      INT       DEFAULT 65              │
-          │  created_at    TIMESTAMPTZ                       │
-          └───────────┬──────────────┬───────────────────────┘
-                      │              │
-           ┌──────────┘              └──────────┐
-           │ 1 : N                              │ 1 : N
-  ┌────────▼──────────────────┐  ┌─────────────▼────────────────┐
-  │        food_logs          │  │      body_weight_logs        │
-  ├───────────────────────────┤  ├──────────────────────────────┤
-  │  id          UUID  PK     │  │  id          UUID  PK        │
-  │  user_id     UUID  FK     │  │  user_id     UUID  FK        │
-  │  date        DATE         │  │  date        DATE            │
-  │  meal_type   TEXT         │  │  weight_kg   NUMERIC(5,2)    │
-  │  food_name   TEXT         │  │  notes       TEXT            │
-  │  quantity    NUMERIC (g)  │  │  created_at  TIMESTAMPTZ     │
-  │  unit        TEXT         │  │                              │
-  │  calories    NUMERIC      │  │  UNIQUE(user_id, date)       │
-  │  protein_g   NUMERIC      │  └──────────────────────────────┘
-  │  carbs_g     NUMERIC      │
-  │  fat_g       NUMERIC      │
-  │  created_at  TIMESTAMPTZ  │
-  └───────────────────────────┘
+```mermaid
+erDiagram
+    auth_users {
+        uuid id PK
+        text email
+        timestamptz created_at
+    }
 
-          ┌───────────────────────────────────────────────────┐
-          │                workout_sessions                    │
-          ├───────────────────────────────────────────────────┤
-          │  id                UUID  PK                       │
-          │  user_id           UUID  FK auth.users            │
-          │  date              DATE                           │
-          │  split_name        TEXT  (e.g. "PPL – Push Day")  │
-          │  duration_minutes  INT                            │
-          │  notes             TEXT                           │
-          │  created_at        TIMESTAMPTZ                    │
-          └──────────────────────┬────────────────────────────┘
-                                 │ 1 : N
-          ┌──────────────────────▼────────────────────────────┐
-          │                  workout_sets                      │
-          ├───────────────────────────────────────────────────┤
-          │  id              UUID    PK                       │
-          │  session_id      UUID    FK workout_sessions      │
-          │  exercise_name   TEXT                             │
-          │  muscle_group    TEXT                             │
-          │  set_number      INT                              │
-          │  reps            INT                              │
-          │  weight_kg       NUMERIC                          │
-          │  rpe             NUMERIC(3,1)   ← RPE 1–10 scale │
-          │  notes           TEXT                             │
-          │  duration_sec    INT    (for timed exercises)     │
-          │  created_at      TIMESTAMPTZ                      │
-          └───────────────────────────────────────────────────┘
+    profiles {
+        uuid id PK
+        uuid user_id FK
+        text name
+        int age
+        numeric height_cm
+        numeric weight_kg
+        int goal_calories
+        int goal_protein
+        int goal_carbs
+        int goal_fat
+        timestamptz created_at
+    }
 
-  Row-Level Security enforced on ALL tables:
-  auth.uid() = user_id  →  users access only their own rows
+    food_logs {
+        uuid id PK
+        uuid user_id FK
+        date date
+        text meal_type
+        text food_name
+        numeric quantity_g
+        numeric calories
+        numeric protein_g
+        numeric carbs_g
+        numeric fat_g
+        timestamptz created_at
+    }
+
+    foods {
+        uuid id PK
+        text name
+        text brand
+        numeric energy_kcal
+        numeric protein_g
+        numeric carbs_g
+        numeric fat_g
+        text image_url
+        text source
+        int search_hits
+        tsvector search_vec
+        timestamptz created_at
+    }
+
+    body_weight_logs {
+        uuid id PK
+        uuid user_id FK
+        date date
+        numeric weight_kg
+        text notes
+        timestamptz created_at
+    }
+
+    workout_sessions {
+        uuid id PK
+        uuid user_id FK
+        date date
+        text split_name
+        int duration_minutes
+        text notes
+        timestamptz created_at
+    }
+
+    workout_sets {
+        uuid id PK
+        uuid session_id FK
+        text exercise_name
+        text muscle_group
+        int set_number
+        int reps
+        numeric weight_kg
+        numeric rpe
+        int duration_sec
+        text notes
+        timestamptz created_at
+    }
+
+    auth_users ||--o{ profiles : "1 to 1"
+    auth_users ||--o{ food_logs : "1 to many"
+    auth_users ||--o{ body_weight_logs : "1 to many"
+    auth_users ||--o{ workout_sessions : "1 to many"
+    workout_sessions ||--o{ workout_sets : "1 to many"
 ```
+
+> Row-Level Security is enforced on **all tables**: `auth.uid() = user_id` — users can only access their own rows.
 
 ---
 
@@ -332,7 +292,7 @@ All data is stored in your own **Supabase PostgreSQL** instance with Row-Level S
 
 ### 🍎 Calorie Tracker
 - **Food Diary** — Breakfast, Lunch, Dinner, Snacks with per-meal calorie totals
-- **Open Food Facts Search** — 3M+ products, scales nutrients by gram quantity in real time
+- **Smart Food Search** — searches local DB of 256 Indian + global foods first (instant), falls back to Open Food Facts (3M+ products), auto-saves new finds
 - **Date Navigation** — browse any past or future date
 - **Macro Donut Chart** — protein / carbs / fat ring with % of daily goal
 - **Gradient Progress Bar** — green → red as you approach/exceed goal
@@ -350,20 +310,19 @@ All data is stored in your own **Supabase PostgreSQL** instance with Row-Level S
 
 ### 🧠 1RM Calculator
 - **Epley formula** — estimates your one-rep max from any set of ≤12 reps
-- **Percentage table** — shows target weight at 60 / 70 / 80 / 90 / 100% with training-goal labels (Warm-up → Max)
-- **Explainer** — plain-English description so any user understands what 1RM means and why it matters
+- **Percentage table** — shows target weight at 60 / 70 / 80 / 90 / 100% with training-goal labels
+- **Plain-English explainer** — any user understands what 1RM means and why it matters
 
 ### 🗺️ Muscle Map
-- **Front / Back SVG body diagram** — anatomically placed ellipse overlays on a human silhouette
+- **Front / Back SVG body diagram** — anatomically placed overlays on a human silhouette
 - **Volume shading** — green intensity reflects sets logged per muscle group in the last 7 days
-- **Trained / Needs Work** legend — tells you exactly which muscles you've neglected
+- **Trained / Needs Work legend** — shows exactly which muscles you've neglected
 
 ### 📊 Dashboard
 - **Hero Calorie Ring** — large donut with % of goal, gradient progress bar, remaining kcal
 - **Macro Grid** — protein, carbs, fat boxes with per-macro mini progress bars
 - **Gradient Quick Actions** — one-tap to food diary or start a workout
 - **Weekly Bar Chart** — 7-day gradient bars (green = today, red = over goal)
-- **Nutrient Targets** — all four macros as labelled progress bars
 
 ### ⚖️ Body Weight Tracking
 - **Daily weigh-in** — log once per day via Profile screen
@@ -375,12 +334,6 @@ All data is stored in your own **Supabase PostgreSQL** instance with Row-Level S
 - **26-week GitHub-style calendar** — one cell per day, green for workout days
 - **Month labels** auto-position across the top
 - **Today highlight** — green border on today's cell
-
-### 👤 Profile
-- **Body stats** — age, height, weight; auto-calculated BMI with category label
-- **Daily goals** — edit calorie, protein, carbs, fat targets
-- **Streak counter** — consecutive days with a logged workout
-- **Data sources** — branded cards for Open Food Facts, free-exercise-db, Supabase
 
 ---
 
@@ -397,7 +350,8 @@ All data is stored in your own **Supabase PostgreSQL** instance with Row-Level S
 | Backend | Supabase Auth + PostgreSQL | Auth, database, Row-Level Security |
 | Data Fetching | TanStack Query v5 | Cache, background refresh, mutations |
 | Charts | react-native-svg | Donut ring, bar chart, line chart, muscle map |
-| Food Data | Open Food Facts API | 3M+ products, open source, no key needed |
+| Food DB | Supabase `foods` table | 256 Indian + global foods, instant search |
+| Food Fallback | Open Food Facts API | 3M+ products, open source, no key needed |
 | Exercise Data | free-exercise-db (MIT) | 55 exercises bundled as JSON |
 | Storage | @react-native-async-storage | Supabase session persistence |
 
@@ -411,8 +365,8 @@ CaloriTracker/
 │   ├── _layout.tsx                  Root: providers + AuthGate redirect
 │   ├── (auth)/
 │   │   ├── _layout.tsx              Auth stack layout
-│   │   ├── login.tsx                Gradient bg + floating form card
-│   │   ├── register.tsx             Indigo gradient + scrollable form
+│   │   ├── login.tsx                Gradient login form
+│   │   ├── register.tsx             Registration with validation
 │   │   └── onboarding.tsx           Multi-step goal + body stat setup
 │   └── (tabs)/
 │       ├── _layout.tsx              Bottom tab bar (pill active indicator)
@@ -423,50 +377,52 @@ CaloriTracker/
 │
 ├── components/
 │   ├── ui/
-│   │   ├── Button.tsx               Gradient primary · ghost · danger · secondary
+│   │   ├── Button.tsx               Gradient · ghost · danger · secondary
 │   │   ├── Card.tsx                 White card with 3 shadow tiers
 │   │   └── Input.tsx                Labelled input with icon + error state
 │   ├── calories/
-│   │   ├── MacroDonut.tsx           SVG ring — protein/carbs/fat segments + legend
-│   │   ├── MealSection.tsx          Per-meal list with gradient icons + delete
-│   │   ├── FoodSearchModal.tsx      Green gradient header + OFF API results
+│   │   ├── MacroDonut.tsx           SVG ring — protein/carbs/fat segments
+│   │   ├── MealSection.tsx          Per-meal list with gradient icons
+│   │   ├── FoodSearchModal.tsx      Smart search: local DB → OFF fallback
 │   │   └── CalorieProgressBar.tsx   Horizontal bar with colour states
 │   ├── exercise/
-│   │   ├── SplitCard.tsx            Gradient program card + expandable day plan
-│   │   ├── WorkoutSession.tsx       Live logger: sets/reps/weight/RPE + rest timer
+│   │   ├── SplitCard.tsx            Gradient program card + day plan
+│   │   ├── WorkoutSession.tsx       Live logger: sets/reps/weight/RPE
 │   │   ├── ExerciseSearch.tsx       Search + muscle group filter
 │   │   ├── ProgressChart.tsx        SVG line chart for strength over time
 │   │   └── MuscleMap.tsx            Front/back SVG body with intensity overlays
 │   └── profile/
-│       ├── BodyWeightChart.tsx      Cubic Bézier trend line + goal dashed line
+│       ├── BodyWeightChart.tsx      Bézier trend line + goal dashed line
 │       └── ActivityHeatmap.tsx      26-week GitHub-style training calendar
 │
 ├── lib/
 │   ├── context/
 │   │   └── AuthContext.tsx          Supabase session · profile · signIn/Out/Up
 │   ├── queries/
-│   │   ├── calories.ts              CRUD food_logs + Open Food Facts search
+│   │   ├── calories.ts              CRUD food_logs · smart food search cascade
 │   │   ├── exercise.ts              CRUD workout_sessions + sets + progress
 │   │   └── bodyweight.ts            CRUD body_weight_logs + latest weight
 │   ├── data/
 │   │   ├── splits.ts                6 workout split definitions
-│   │   └── exercises.json           55 exercises with muscle groups + instructions
+│   │   ├── exercises.json           55 exercises with muscle groups + GIF URLs
+│   │   └── foods-seed.ts            256 Indian + global foods (seed source)
 │   ├── supabase.ts                  Supabase client (AsyncStorage session)
 │   └── types.ts                     All TypeScript interfaces and types
+│
+├── scripts/
+│   ├── seed-foods.sql               Run once in Supabase SQL Editor to seed foods
+│   └── generate-sql.js              Generates seed-foods.sql from foods-seed.ts
 │
 ├── supabase/
 │   └── migrations/
 │       ├── 001_init.sql             Core schema: profiles, food_logs, sessions, sets
-│       └── 002_bodyweight_rpe.sql   body_weight_logs table + rpe/notes columns
+│       └── 002_bodyweight_rpe.sql   body_weight_logs + rpe/notes columns
 │
 ├── .env.example                     Environment variable template
-├── .env                             Supabase credentials (git-ignored)
-├── app.json                         Expo config (web: single output)
+├── app.json                         Expo config
 ├── babel.config.js                  NativeWind JSX transform
 ├── metro.config.js                  Metro + NativeWind CSS pipeline
 ├── tailwind.config.js               Tailwind theme + custom palette
-├── global.css                       Tailwind @tailwind directives
-├── nativewind-env.d.ts              NativeWind + CSS module type declarations
 └── tsconfig.json
 ```
 
@@ -476,11 +432,9 @@ CaloriTracker/
 
 ### Prerequisites
 
-- **Node.js** 18+
-- **[Expo Go](https://expo.dev/client)** on your phone — or an iOS/Android emulator
+- **Node.js** 22+
 - A free **[Supabase](https://supabase.com)** account
-
----
+- **[Expo Go](https://expo.dev/client)** on your phone — or Android Studio for a development build
 
 ### Step 1 — Clone and install
 
@@ -490,54 +444,72 @@ cd CaloriTracker
 npm install
 ```
 
----
-
 ### Step 2 — Create a Supabase project
 
 1. Go to [supabase.com](https://supabase.com) → **New Project**
 2. Navigate to **Settings → API**
 3. Copy your **Project URL** and **anon/public** key
 
----
-
-### Step 3 — Run the database migrations
-
-In the Supabase **SQL Editor**, run each file in order:
-
-```
-supabase/migrations/001_init.sql        ← core schema + RLS
-supabase/migrations/002_bodyweight_rpe.sql  ← body weight + RPE columns
-```
-
----
-
-### Step 4 — Configure environment variables
-
-Create a `.env` file in the project root:
+### Step 3 — Configure environment variables
 
 ```env
+# .env
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-> The `EXPO_PUBLIC_` prefix makes variables available at runtime in Expo.
+### Step 4 — Run database migrations
 
----
+In **Supabase → SQL Editor**, run in order:
+
+```
+supabase/migrations/001_init.sql
+supabase/migrations/002_bodyweight_rpe.sql
+```
+
+Then create the foods table and seed it:
+
+```sql
+-- 1. Create foods table (copy from SQL Editor)
+CREATE TABLE IF NOT EXISTS foods (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name         TEXT NOT NULL,
+  brand        TEXT DEFAULT '',
+  energy_kcal  NUMERIC NOT NULL DEFAULT 0,
+  protein_g    NUMERIC NOT NULL DEFAULT 0,
+  carbs_g      NUMERIC NOT NULL DEFAULT 0,
+  fat_g        NUMERIC NOT NULL DEFAULT 0,
+  image_url    TEXT,
+  source       TEXT NOT NULL DEFAULT 'seed',
+  search_hits  INTEGER NOT NULL DEFAULT 0,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  search_vec   TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', name || ' ' || COALESCE(brand,''))) STORED
+);
+CREATE INDEX IF NOT EXISTS foods_search_vec_idx ON foods USING GIN(search_vec);
+CREATE INDEX IF NOT EXISTS foods_name_idx ON foods (LOWER(name) text_pattern_ops);
+ALTER TABLE foods ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "foods_read_all" ON foods FOR SELECT USING (true);
+CREATE POLICY "foods_insert_auth" ON foods FOR INSERT WITH CHECK (true);
+CREATE POLICY "foods_update_hits" ON foods FOR UPDATE USING (true);
+ALTER TABLE foods ADD CONSTRAINT foods_name_unique UNIQUE (name);
+
+-- 2. Helper function for search popularity
+CREATE OR REPLACE FUNCTION increment_food_hits(food_name TEXT)
+RETURNS void LANGUAGE sql AS $$
+  UPDATE foods SET search_hits = search_hits + 1
+  WHERE LOWER(name) LIKE '%' || LOWER(food_name) || '%';
+$$;
+```
+
+Then paste and run `scripts/seed-foods.sql` to load 256 foods.
 
 ### Step 5 — Start the app
 
 ```bash
-npx expo start --clear
+npx expo start
 ```
 
-| Platform | How to open |
-|---|---|
-| Physical phone | Scan QR code with **Expo Go** (Android) or **Camera** (iOS) |
-| Android emulator | Press `a` in the terminal |
-| iOS simulator | Press `i` in the terminal |
-| Web (limited) | Press `w` in the terminal |
-
-> **First run:** Register → complete onboarding to set your calorie and macro goals, then start exploring.
+Connect your phone to the same Wi-Fi as your PC and scan the QR code with Expo Go.
 
 ---
 
@@ -552,10 +524,7 @@ npx expo start --clear
 | Bro Split | 5 | Intermediate | Focused isolation per muscle |
 | PHUL (Power Hypertrophy) | 4 | Intermediate | Strength + size combined |
 
-Each split includes:
-- Day-by-day breakdown with target muscle groups
-- Pre-loaded exercise list (auto-populated when you start a session)
-- Level badge (Beginner / Intermediate / Advanced)
+Each split includes a day-by-day breakdown with target muscle groups and a pre-loaded exercise list that auto-populates when you start a session.
 
 ---
 
@@ -563,10 +532,13 @@ Each split includes:
 
 | Source | License | Usage |
 |---|---|---|
-| [Open Food Facts](https://world.openfoodfacts.org/) | ODbL | Food search — 3M+ products, no API key required |
+| [Open Food Facts](https://world.openfoodfacts.org/) | ODbL | Food search fallback — 3M+ products, no API key |
+| [IFCT 2017 / NIN India](https://www.nin.res.in/) | Public domain | Nutritional values for Indian foods in seed DB |
+| [USDA FoodData Central](https://fdc.nal.usda.gov/) | Public domain | Nutritional values for global staples in seed DB |
 | [free-exercise-db](https://github.com/yuhonas/free-exercise-db) | MIT | 55 exercises bundled as JSON, used offline |
-| [Supabase](https://supabase.com) | Apache 2.0 | Auth, PostgreSQL database, Row-Level Security |
-| [openGym](https://github.com/DuarteSantos8/openGym) | AGPL v3 | UI/UX inspiration only — no code copied |
+| [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) | MIT (code) · © Gym Visual (media) | Exercise GIFs/thumbnails via CDN |
+| [openGym](https://github.com/arvids-unavailable/openGym) | AGPL v3 | UI/UX inspiration only — no code copied |
+| [Supabase](https://supabase.com) | Apache 2.0 | Auth, PostgreSQL database, RLS |
 
 ---
 
