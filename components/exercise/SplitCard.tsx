@@ -2,7 +2,35 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { WorkoutSplit } from '@/lib/types';
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+function usePressScale(to = 0.92) {
+  const scale = useSharedValue(1);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return {
+    style,
+    onPressIn: () => { scale.value = withSpring(to, { damping: 15, stiffness: 300 }); },
+    onPressOut: () => { scale.value = withSpring(1, { damping: 12, stiffness: 200 }); },
+  };
+}
+
+function StartDayButton({ color, onPress }: { color: string; onPress: () => void }) {
+  const press = usePressScale();
+  return (
+    <AnimatedTouchable
+      onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: color + '18', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }, press.style]}
+    >
+      <Ionicons name="play" size={11} color={color} />
+      <Text style={{ color, fontSize: 12, fontWeight: '700' }}>Start</Text>
+    </AnimatedTouchable>
+  );
+}
 
 interface SplitCardProps {
   split: WorkoutSplit;
@@ -11,6 +39,7 @@ interface SplitCardProps {
 
 export default function SplitCard({ split, onStartWorkout }: SplitCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const chevronPress = usePressScale();
 
   const levelConfig = {
     Beginner: { color: '#059669', bg: '#ECFDF5', dot: '#10B981' },
@@ -30,9 +59,11 @@ export default function SplitCard({ split, onStartWorkout }: SplitCardProps) {
       shadowRadius: 12,
       elevation: 5,
     }}>
-      {/* Gradient header */}
+      {/* Gradient header — one shared neutral tone across every split; split.color
+          is reserved for the small accent badges below (day bubbles, Start button)
+          so it reads as a quiet identifier, not a competing full-card hue. */}
       <LinearGradient
-        colors={[split.color + 'EE', split.color + '99']}
+        colors={['#1E293B', '#334155']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{ padding: 18 }}
@@ -54,12 +85,14 @@ export default function SplitCard({ split, onStartWorkout }: SplitCardProps) {
               </View>
             </View>
           </View>
-          <TouchableOpacity
+          <AnimatedTouchable
             onPress={() => setExpanded(!expanded)}
-            style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center' }}
+            onPressIn={chevronPress.onPressIn}
+            onPressOut={chevronPress.onPressOut}
+            style={[{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center' }, chevronPress.style]}
           >
             <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color="white" />
-          </TouchableOpacity>
+          </AnimatedTouchable>
         </View>
 
         {/* Best for */}
@@ -109,13 +142,7 @@ export default function SplitCard({ split, onStartWorkout }: SplitCardProps) {
                     <Text style={{ color: '#1E293B', fontWeight: '700', fontSize: 13 }}>{day.name}</Text>
                   </View>
                   {onStartWorkout && (
-                    <TouchableOpacity
-                      onPress={() => onStartWorkout(split, idx)}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: split.color + '18', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }}
-                    >
-                      <Ionicons name="play" size={11} color={split.color} />
-                      <Text style={{ color: split.color, fontSize: 12, fontWeight: '700' }}>Start</Text>
-                    </TouchableOpacity>
+                    <StartDayButton color={split.color} onPress={() => onStartWorkout(split, idx)} />
                   )}
                 </View>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>

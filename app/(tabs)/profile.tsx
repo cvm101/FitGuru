@@ -21,8 +21,57 @@ import { getBodyWeightLogs, upsertBodyWeight } from '@/lib/queries/bodyweight';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import AnimatedNumber from '@/components/ui/AnimatedNumber';
+import AnimatedProgressBar from '@/components/ui/AnimatedProgressBar';
+import ScreenHeader from '@/components/ui/ScreenHeader';
+import Eyebrow from '@/components/ui/Eyebrow';
 import BodyWeightChart from '@/components/profile/BodyWeightChart';
 import ActivityHeatmap from '@/components/profile/ActivityHeatmap';
+import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+function usePressScale(to = 0.94) {
+  const scale = useSharedValue(1);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return {
+    style,
+    onPressIn: () => { scale.value = withSpring(to, { damping: 15, stiffness: 300 }); },
+    onPressOut: () => { scale.value = withSpring(1, { damping: 12, stiffness: 200 }); },
+  };
+}
+
+function AvatarEditButton({ onPress }: { onPress: () => void }) {
+  const press = usePressScale();
+  return (
+    <AnimatedTouchable
+      onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[
+        { position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: 9, backgroundColor: '#10B981', borderWidth: 2, borderColor: '#1E293B', alignItems: 'center', justifyContent: 'center' },
+        press.style,
+      ]}
+    >
+      <Ionicons name="pencil" size={12} color="white" />
+    </AnimatedTouchable>
+  );
+}
+
+function EditPill({ label, icon, color, bg, onPress }: { label: string; icon: string; color: string; bg: string; onPress: () => void }) {
+  const press = usePressScale();
+  return (
+    <AnimatedTouchable
+      onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: bg, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 }, press.style]}
+    >
+      <Ionicons name={icon as any} size={12} color={color} />
+      <Text style={{ color, fontSize: 12, fontWeight: '700' }}>{label}</Text>
+    </AnimatedTouchable>
+  );
+}
 
 function todayDate() {
   return new Date().toISOString().split('T')[0];
@@ -133,19 +182,14 @@ export default function ProfileScreen() {
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
-      <LinearGradient colors={['#0F172A', '#1E293B']} style={{ paddingTop: 56, paddingBottom: 32, alignItems: 'center', paddingHorizontal: 20 }}>
+      <ScreenHeader colors={['#0F172A', '#1E293B']} paddingBottom={32} style={{ alignItems: 'center' }}>
         {/* Avatar */}
         <View style={{ marginBottom: 14 }}>
           <LinearGradient colors={['#059669', '#10B981']} style={{ width: 80, height: 80, borderRadius: 30, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: 'white', fontWeight: '800', fontSize: 32 }}>{initial}</Text>
           </LinearGradient>
           {!editing && (
-            <TouchableOpacity
-              onPress={startEditing}
-              style={{ position: 'absolute', bottom: -4, right: -4, width: 26, height: 26, borderRadius: 9, backgroundColor: '#10B981', borderWidth: 2, borderColor: '#1E293B', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <Ionicons name="pencil" size={12} color="white" />
-            </TouchableOpacity>
+            <AvatarEditButton onPress={startEditing} />
           )}
         </View>
 
@@ -157,19 +201,24 @@ export default function ProfileScreen() {
           {[
             { val: totalWorkouts, label: 'Workouts', icon: 'barbell-outline' },
             { val: streak, label: 'Day Streak', icon: 'flame-outline' },
-            { val: avgCalories || '—', label: 'Avg kcal', icon: 'nutrition-outline' },
-          ].map((s) => (
-            <View key={s.label} style={{ alignItems: 'center', gap: 4 }}>
-              <Text style={{ color: 'white', fontWeight: '800', fontSize: 20 }}>{s.val}</Text>
+            { val: avgCalories, label: 'Avg kcal', icon: 'nutrition-outline' },
+          ].map((s, i) => (
+            <Animated.View key={s.label} entering={FadeInDown.delay(i * 80).springify().damping(16)} style={{ alignItems: 'center', gap: 4 }}>
+              {s.val > 0 ? (
+                <AnimatedNumber value={s.val} style={{ color: 'white', fontWeight: '800', fontSize: 20 }} />
+              ) : (
+                <Text style={{ color: 'white', fontWeight: '800', fontSize: 20 }}>—</Text>
+              )}
               <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>{s.label}</Text>
-            </View>
+            </Animated.View>
           ))}
         </View>
-      </LinearGradient>
+      </ScreenHeader>
 
       <View style={{ paddingHorizontal: 16, marginTop: 16, gap: 14 }}>
         {/* Body weight chart */}
         <Card>
+          <Eyebrow label="Progress" />
           <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A', marginBottom: 14 }}>Body Weight</Text>
           <BodyWeightChart
             logs={weightLogs}
@@ -185,13 +234,11 @@ export default function ProfileScreen() {
 
         {/* Body Stats */}
         <Card>
+          <Eyebrow label="Profile" color="#059669" bg="#ECFDF5" />
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>Body Stats</Text>
             {!editing && (
-              <TouchableOpacity onPress={startEditing} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#ECFDF5', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 }}>
-                <Ionicons name="pencil" size={12} color="#059669" />
-                <Text style={{ color: '#059669', fontSize: 12, fontWeight: '700' }}>Edit</Text>
-              </TouchableOpacity>
+              <EditPill label="Edit" icon="pencil" color="#059669" bg="#ECFDF5" onPress={startEditing} />
             )}
           </View>
 
@@ -199,7 +246,7 @@ export default function ProfileScreen() {
             <>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                 {[
-                  { label: 'Age', val: profile?.age ? `${profile.age} yrs` : '—', icon: 'calendar', color: '#6366F1' },
+                  { label: 'Age', val: profile?.age ? `${profile.age} yrs` : '—', icon: 'calendar', color: '#059669' },
                   { label: 'Height', val: profile?.height_cm ? `${profile.height_cm} cm` : '—', icon: 'resize', color: '#3B82F6' },
                   { label: 'Weight', val: profile?.weight_kg ? `${profile.weight_kg} kg` : '—', icon: 'barbell', color: '#10B981' },
                   { label: 'BMI', val: BMI ?? '—', icon: 'analytics', color: bmiInfo?.color ?? '#94A3B8' },
@@ -234,13 +281,11 @@ export default function ProfileScreen() {
 
         {/* Daily Goals */}
         <Card>
+          <Eyebrow label="Targets" color="#D97706" bg="#FFFBEB" />
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>Daily Goals</Text>
             {!editing && (
-              <TouchableOpacity onPress={startEditing} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#ECFDF5', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 }}>
-                <Ionicons name="pencil" size={12} color="#059669" />
-                <Text style={{ color: '#059669', fontSize: 12, fontWeight: '700' }}>Adjust</Text>
-              </TouchableOpacity>
+              <EditPill label="Adjust" icon="pencil" color="#059669" bg="#ECFDF5" onPress={startEditing} />
             )}
           </View>
 
@@ -251,19 +296,17 @@ export default function ProfileScreen() {
                 { label: 'Protein', val: `${profile?.goal_protein ?? 150}`, unit: 'g', color: '#3B82F6', pct: ((profile?.goal_protein ?? 150) * 4) / (profile?.goal_calories ?? 2000) },
                 { label: 'Carbohydrates', val: `${profile?.goal_carbs ?? 250}`, unit: 'g', color: '#F59E0B', pct: ((profile?.goal_carbs ?? 250) * 4) / (profile?.goal_calories ?? 2000) },
                 { label: 'Fat', val: `${profile?.goal_fat ?? 65}`, unit: 'g', color: '#EF4444', pct: ((profile?.goal_fat ?? 65) * 9) / (profile?.goal_calories ?? 2000) },
-              ].map((g) => (
-                <View key={g.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              ].map((g, i) => (
+                <Animated.View key={g.label} entering={FadeInDown.delay(i * 70).springify().damping(16)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <View style={{ width: 4, height: 40, borderRadius: 2, backgroundColor: g.color }} />
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                       <Text style={{ color: '#475569', fontSize: 13 }}>{g.label}</Text>
                       <Text style={{ color: '#0F172A', fontWeight: '700', fontSize: 13 }}>{g.val} <Text style={{ color: '#94A3B8', fontWeight: '400' }}>{g.unit}</Text></Text>
                     </View>
-                    <View style={{ height: 5, backgroundColor: '#F1F5F9', borderRadius: 3, overflow: 'hidden' }}>
-                      <View style={{ height: '100%', backgroundColor: g.color, borderRadius: 3, width: `${Math.min(g.pct * 100, 100)}%`, opacity: 0.7 }} />
-                    </View>
+                    <AnimatedProgressBar percent={g.pct * 100} color={g.color} height={5} delay={i * 70} style={{ opacity: 0.7 }} />
                   </View>
-                </View>
+                </Animated.View>
               ))}
             </View>
           ) : (
@@ -288,10 +331,11 @@ export default function ProfileScreen() {
 
         {/* About */}
         <Card>
+          <Eyebrow label="Credits" color="#64748B" bg="#F1F5F9" />
           <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A', marginBottom: 12 }}>Data Sources</Text>
           {[
             { icon: 'nutrition', color: '#10B981', title: 'Open Food Facts', desc: '3M+ products · Free & open source' },
-            { icon: 'barbell', color: '#6366F1', title: 'free-exercise-db', desc: '55 exercises · MIT license' },
+            { icon: 'barbell', color: '#059669', title: 'free-exercise-db', desc: '55 exercises · MIT license' },
             { icon: 'server', color: '#3B82F6', title: 'Supabase', desc: 'PostgreSQL · Row Level Security' },
           ].map((info, i) => (
             <View key={info.title} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: '#F8FAFC' }}>

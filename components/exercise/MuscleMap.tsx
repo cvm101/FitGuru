@@ -1,6 +1,36 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import Svg, { Ellipse, Rect, Circle, G } from 'react-native-svg';
 import { useState } from 'react';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+function usePressScale(to = 0.92) {
+  const scale = useSharedValue(1);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return {
+    style,
+    onPressIn: () => { scale.value = withSpring(to, { damping: 15, stiffness: 300 }); },
+    onPressOut: () => { scale.value = withSpring(1, { damping: 12, stiffness: 200 }); },
+  };
+}
+
+function SideToggleButton({ side, active, onPress }: { side: 'front' | 'back'; active: boolean; onPress: () => void }) {
+  const press = usePressScale();
+  return (
+    <AnimatedTouchable
+      onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[
+        { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 9, backgroundColor: active ? 'white' : 'transparent', shadowColor: active ? '#000' : 'transparent', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 2, elevation: active ? 1 : 0 },
+        press.style,
+      ]}
+    >
+      <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#0F172A' : '#94A3B8', textTransform: 'capitalize' }}>{side}</Text>
+    </AnimatedTouchable>
+  );
+}
 
 interface MuscleMapProps {
   muscleVolumes: Record<string, number>;
@@ -134,13 +164,7 @@ export default function MuscleMap({ muscleVolumes, period = 'this week' }: Muscl
         {/* Front / Back toggle */}
         <View style={{ flexDirection: 'row', backgroundColor: '#F1F5F9', borderRadius: 12, padding: 3 }}>
           {(['front', 'back'] as const).map((s) => (
-            <TouchableOpacity
-              key={s}
-              onPress={() => setSide(s)}
-              style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 9, backgroundColor: side === s ? 'white' : 'transparent', shadowColor: side === s ? '#000' : 'transparent', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 2, elevation: side === s ? 1 : 0 }}
-            >
-              <Text style={{ fontSize: 12, fontWeight: '700', color: side === s ? '#0F172A' : '#94A3B8', textTransform: 'capitalize' }}>{s}</Text>
-            </TouchableOpacity>
+            <SideToggleButton key={s} side={s} active={side === s} onPress={() => setSide(s)} />
           ))}
         </View>
       </View>

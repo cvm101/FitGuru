@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/context/AuthContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import GrainOverlay from '@/components/ui/GrainOverlay';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
@@ -55,6 +56,7 @@ export default function LoginScreen() {
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
       >
+        <GrainOverlay />
         {/* Logo section */}
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 40 }}>
           <View style={{
