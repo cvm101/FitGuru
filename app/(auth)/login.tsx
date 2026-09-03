@@ -6,7 +6,6 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-  Alert,
   StatusBar,
 } from 'react-native';
 import { Link } from 'expo-router';
@@ -24,6 +23,7 @@ export default function LoginScreen() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [authError, setAuthError] = useState<string | null>(null);
 
   function validate() {
     const e: typeof errors = {};
@@ -33,13 +33,24 @@ export default function LoginScreen() {
     return Object.keys(e).length === 0;
   }
 
+  // Map Supabase error messages to friendly text
+  function friendlyError(msg: string): string {
+    const m = msg.toLowerCase();
+    if (m.includes('invalid login') || m.includes('invalid credentials')) return 'Incorrect email or password.';
+    if (m.includes('email not confirmed')) return 'Please confirm your email before signing in.';
+    if (m.includes('user not found')) return 'No account found with this email.';
+    if (m.includes('too many requests')) return 'Too many attempts. Please wait a moment and try again.';
+    return msg;
+  }
+
   async function handleLogin() {
+    setAuthError(null);
     if (!validate()) return;
     setLoading(true);
     try {
       await signIn(email.trim(), password);
     } catch (err: any) {
-      Alert.alert('Login failed', err.message ?? 'Please check your credentials.');
+      setAuthError(friendlyError(err.message ?? 'Please check your credentials.'));
     } finally {
       setLoading(false);
     }
@@ -95,7 +106,7 @@ export default function LoginScreen() {
             <Input
               label="Email address"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(t) => { setEmail(t); setAuthError(null); }}
               placeholder="you@example.com"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -108,7 +119,7 @@ export default function LoginScreen() {
               <Input
                 label="Password"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(t) => { setPassword(t); setAuthError(null); }}
                 placeholder="••••••••"
                 secureTextEntry={!showPw}
                 error={errors.password}
@@ -121,6 +132,20 @@ export default function LoginScreen() {
           </View>
 
           <View style={{ marginTop: 24 }}>
+            {/* Inline auth error banner */}
+            {authError && (
+              <View style={{
+                flexDirection: 'row', alignItems: 'center', gap: 10,
+                backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA',
+                borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 16,
+              }}>
+                <Ionicons name="alert-circle" size={18} color="#DC2626" />
+                <Text style={{ color: '#DC2626', fontSize: 13, fontWeight: '600', flex: 1 }}>{authError}</Text>
+                <TouchableOpacity onPress={() => setAuthError(null)}>
+                  <Ionicons name="close" size={16} color="#DC2626" />
+                </TouchableOpacity>
+              </View>
+            )}
             <Button title="Sign In" onPress={handleLogin} loading={loading} size="lg" />
           </View>
 

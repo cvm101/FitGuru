@@ -353,7 +353,17 @@ export default function ProfileScreen() {
         {/* Sign out */}
         <Button
           title="Sign Out"
-          onPress={() => Alert.alert('Sign Out', 'Are you sure?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Sign Out', style: 'destructive', onPress: signOut }])}
+          onPress={() => {
+            if (Platform.OS === 'web') {
+              // Alert.alert is no-op on web — use native confirm instead
+              if (window.confirm('Are you sure you want to sign out?')) signOut();
+            } else {
+              Alert.alert('Sign Out', 'Are you sure?', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Sign Out', style: 'destructive', onPress: signOut },
+              ]);
+            }
+          }}
           variant="danger"
         />
       </View>
