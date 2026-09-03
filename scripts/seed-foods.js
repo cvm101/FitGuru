@@ -1,0 +1,353 @@
+/**
+ * One-time seed script — no TypeScript, no dotenv needed.
+ * Run with: node scripts/seed-foods.js
+ */
+const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
+const path = require('path');
+
+// Read .env manually (no dotenv dependency needed)
+const envPath = path.join(__dirname, '..', '.env');
+const env = Object.fromEntries(
+  fs.readFileSync(envPath, 'utf8')
+    .split('\n')
+    .filter(l => l.includes('='))
+    .map(l => l.split('=').map(s => s.trim()))
+);
+
+const supabase = createClient(
+  env.EXPO_PUBLIC_SUPABASE_URL,
+  env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+);
+
+const SEED_FOODS = [
+  // ── Indian Breads ─────────────────────────────────────────────────────────
+  { name: 'Roti (Chapati)', energy_kcal: 297, protein_g: 9.0, carbs_g: 54.0, fat_g: 4.5 },
+  { name: 'Wheat Roti', energy_kcal: 297, protein_g: 9.0, carbs_g: 54.0, fat_g: 4.5 },
+  { name: 'Paratha', energy_kcal: 326, protein_g: 7.5, carbs_g: 49.0, fat_g: 11.5 },
+  { name: 'Aloo Paratha', energy_kcal: 290, protein_g: 6.5, carbs_g: 44.0, fat_g: 9.5 },
+  { name: 'Puri', energy_kcal: 403, protein_g: 7.8, carbs_g: 48.0, fat_g: 19.0 },
+  { name: 'Naan', energy_kcal: 310, protein_g: 10.0, carbs_g: 55.0, fat_g: 5.5 },
+  { name: 'Bhatura', energy_kcal: 370, protein_g: 8.5, carbs_g: 50.0, fat_g: 15.0 },
+  { name: 'Tandoori Roti', energy_kcal: 280, protein_g: 9.5, carbs_g: 52.0, fat_g: 3.5 },
+  { name: 'Missi Roti', energy_kcal: 310, protein_g: 11.5, carbs_g: 48.0, fat_g: 7.5 },
+  { name: 'Rumali Roti', energy_kcal: 265, protein_g: 8.0, carbs_g: 50.0, fat_g: 3.5 },
+  { name: 'Thepla', energy_kcal: 320, protein_g: 9.5, carbs_g: 45.0, fat_g: 11.0 },
+  { name: 'Methi Thepla', energy_kcal: 315, protein_g: 9.0, carbs_g: 44.0, fat_g: 10.5 },
+  { name: 'Idli', energy_kcal: 154, protein_g: 4.5, carbs_g: 30.0, fat_g: 1.5 },
+  { name: 'Dosa', energy_kcal: 168, protein_g: 4.5, carbs_g: 30.0, fat_g: 3.0 },
+  { name: 'Masala Dosa', energy_kcal: 215, protein_g: 5.0, carbs_g: 36.0, fat_g: 6.0 },
+  { name: 'Uttapam', energy_kcal: 180, protein_g: 5.5, carbs_g: 32.0, fat_g: 3.5 },
+  { name: 'Appam', energy_kcal: 180, protein_g: 3.8, carbs_g: 36.0, fat_g: 2.5 },
+  { name: 'Pesarattu', energy_kcal: 162, protein_g: 8.0, carbs_g: 27.0, fat_g: 2.5 },
+  // ── Rice & Pulao ──────────────────────────────────────────────────────────
+  { name: 'White Rice (cooked)', energy_kcal: 130, protein_g: 2.7, carbs_g: 28.2, fat_g: 0.3 },
+  { name: 'Brown Rice (cooked)', energy_kcal: 111, protein_g: 2.6, carbs_g: 23.0, fat_g: 0.9 },
+  { name: 'Basmati Rice (cooked)', energy_kcal: 121, protein_g: 3.5, carbs_g: 25.0, fat_g: 0.4 },
+  { name: 'Biryani (Chicken)', energy_kcal: 200, protein_g: 11.0, carbs_g: 28.0, fat_g: 5.0 },
+  { name: 'Biryani (Mutton)', energy_kcal: 230, protein_g: 12.0, carbs_g: 28.0, fat_g: 7.5 },
+  { name: 'Vegetable Biryani', energy_kcal: 175, protein_g: 5.0, carbs_g: 32.0, fat_g: 3.5 },
+  { name: 'Jeera Rice', energy_kcal: 160, protein_g: 3.5, carbs_g: 30.0, fat_g: 3.5 },
+  { name: 'Pulao', energy_kcal: 165, protein_g: 4.0, carbs_g: 31.0, fat_g: 3.0 },
+  { name: 'Khichdi', energy_kcal: 155, protein_g: 6.5, carbs_g: 27.5, fat_g: 2.5 },
+  { name: 'Curd Rice', energy_kcal: 135, protein_g: 4.5, carbs_g: 23.0, fat_g: 3.0 },
+  { name: 'Lemon Rice', energy_kcal: 175, protein_g: 3.5, carbs_g: 33.0, fat_g: 4.0 },
+  { name: 'Tamarind Rice', energy_kcal: 185, protein_g: 3.5, carbs_g: 33.5, fat_g: 4.5 },
+  { name: 'Coconut Rice', energy_kcal: 200, protein_g: 3.8, carbs_g: 33.0, fat_g: 6.0 },
+  { name: 'Poha (Flattened Rice)', energy_kcal: 180, protein_g: 3.5, carbs_g: 36.0, fat_g: 2.5 },
+  { name: 'Aloo Poha', energy_kcal: 195, protein_g: 4.0, carbs_g: 37.0, fat_g: 4.0 },
+  // ── Dal & Lentils ─────────────────────────────────────────────────────────
+  { name: 'Dal Tadka', energy_kcal: 120, protein_g: 7.5, carbs_g: 16.0, fat_g: 3.0 },
+  { name: 'Dal Makhani', energy_kcal: 165, protein_g: 8.0, carbs_g: 18.0, fat_g: 7.0 },
+  { name: 'Yellow Dal (cooked)', energy_kcal: 116, protein_g: 7.0, carbs_g: 19.0, fat_g: 1.5 },
+  { name: 'Masoor Dal (cooked)', energy_kcal: 115, protein_g: 8.0, carbs_g: 18.0, fat_g: 0.5 },
+  { name: 'Moong Dal (cooked)', energy_kcal: 105, protein_g: 7.0, carbs_g: 17.5, fat_g: 0.5 },
+  { name: 'Chana Dal (cooked)', energy_kcal: 164, protein_g: 8.9, carbs_g: 27.0, fat_g: 2.0 },
+  { name: 'Urad Dal (cooked)', energy_kcal: 120, protein_g: 8.5, carbs_g: 18.5, fat_g: 1.0 },
+  { name: 'Rajma (Kidney Beans)', energy_kcal: 140, protein_g: 8.7, carbs_g: 22.0, fat_g: 0.8 },
+  { name: 'Chole (Chickpeas)', energy_kcal: 168, protein_g: 9.0, carbs_g: 27.5, fat_g: 2.8 },
+  { name: 'Sambhar', energy_kcal: 90, protein_g: 4.5, carbs_g: 13.0, fat_g: 2.0 },
+  // ── Vegetables & Sabzi ────────────────────────────────────────────────────
+  { name: 'Paneer Butter Masala', energy_kcal: 250, protein_g: 10.0, carbs_g: 12.0, fat_g: 18.0 },
+  { name: 'Palak Paneer', energy_kcal: 215, protein_g: 10.5, carbs_g: 8.0, fat_g: 16.0 },
+  { name: 'Shahi Paneer', energy_kcal: 280, protein_g: 10.0, carbs_g: 12.0, fat_g: 22.0 },
+  { name: 'Paneer Bhurji', energy_kcal: 235, protein_g: 11.5, carbs_g: 6.0, fat_g: 18.5 },
+  { name: 'Aloo Gobi', energy_kcal: 115, protein_g: 3.5, carbs_g: 16.0, fat_g: 4.5 },
+  { name: 'Aloo Matar', energy_kcal: 125, protein_g: 4.0, carbs_g: 19.0, fat_g: 4.0 },
+  { name: 'Aloo Jeera', energy_kcal: 130, protein_g: 2.5, carbs_g: 20.0, fat_g: 5.0 },
+  { name: 'Bhindi Masala (Okra)', energy_kcal: 100, protein_g: 3.0, carbs_g: 13.0, fat_g: 4.0 },
+  { name: 'Baingan Bharta', energy_kcal: 90, protein_g: 2.5, carbs_g: 9.0, fat_g: 5.0 },
+  { name: 'Pav Bhaji', energy_kcal: 215, protein_g: 6.5, carbs_g: 32.0, fat_g: 7.5 },
+  { name: 'Matar Paneer', energy_kcal: 200, protein_g: 9.5, carbs_g: 13.0, fat_g: 13.0 },
+  { name: 'Gobhi Masala', energy_kcal: 95, protein_g: 3.5, carbs_g: 11.0, fat_g: 4.5 },
+  { name: 'Sarson Ka Saag', energy_kcal: 98, protein_g: 4.5, carbs_g: 9.0, fat_g: 5.0 },
+  { name: 'Kadhi Pakora', energy_kcal: 145, protein_g: 5.0, carbs_g: 17.0, fat_g: 6.0 },
+  { name: 'Mixed Vegetable Curry', energy_kcal: 105, protein_g: 3.5, carbs_g: 13.0, fat_g: 4.5 },
+  { name: 'Lauki Sabzi (Bottle Gourd)', energy_kcal: 65, protein_g: 2.0, carbs_g: 9.0, fat_g: 2.5 },
+  { name: 'Karela Masala (Bitter Gourd)', energy_kcal: 80, protein_g: 2.5, carbs_g: 9.5, fat_g: 3.5 },
+  { name: 'Tinda Sabzi', energy_kcal: 60, protein_g: 1.5, carbs_g: 8.5, fat_g: 2.5 },
+  { name: 'Arbi Masala (Taro)', energy_kcal: 140, protein_g: 3.0, carbs_g: 24.0, fat_g: 4.0 },
+  { name: 'Jackfruit Curry', energy_kcal: 120, protein_g: 2.5, carbs_g: 20.5, fat_g: 3.5 },
+  // ── Snacks & Street Food ──────────────────────────────────────────────────
+  { name: 'Samosa', energy_kcal: 308, protein_g: 6.0, carbs_g: 38.0, fat_g: 14.0 },
+  { name: 'Kachori', energy_kcal: 365, protein_g: 7.5, carbs_g: 46.0, fat_g: 17.0 },
+  { name: 'Vada Pav', energy_kcal: 290, protein_g: 7.5, carbs_g: 43.0, fat_g: 10.0 },
+  { name: 'Misal Pav', energy_kcal: 275, protein_g: 9.5, carbs_g: 42.0, fat_g: 8.0 },
+  { name: 'Pani Puri', energy_kcal: 265, protein_g: 5.5, carbs_g: 42.0, fat_g: 9.0 },
+  { name: 'Bhel Puri', energy_kcal: 220, protein_g: 5.5, carbs_g: 36.0, fat_g: 7.0 },
+  { name: 'Dahi Puri', energy_kcal: 195, protein_g: 5.0, carbs_g: 32.0, fat_g: 5.5 },
+  { name: 'Sev Puri', energy_kcal: 235, protein_g: 5.0, carbs_g: 37.0, fat_g: 8.0 },
+  { name: 'Aloo Tikki', energy_kcal: 240, protein_g: 4.5, carbs_g: 36.0, fat_g: 9.0 },
+  { name: 'Pakora (Onion)', energy_kcal: 285, protein_g: 6.5, carbs_g: 33.0, fat_g: 14.0 },
+  { name: 'Pakora (Palak)', energy_kcal: 255, protein_g: 6.0, carbs_g: 29.0, fat_g: 13.0 },
+  { name: 'Medu Vada', energy_kcal: 295, protein_g: 8.5, carbs_g: 35.0, fat_g: 13.0 },
+  { name: 'Dhokla', energy_kcal: 160, protein_g: 6.5, carbs_g: 26.0, fat_g: 3.5 },
+  { name: 'Khaman Dhokla', energy_kcal: 155, protein_g: 7.0, carbs_g: 24.5, fat_g: 3.5 },
+  { name: 'Khandvi', energy_kcal: 185, protein_g: 7.5, carbs_g: 25.0, fat_g: 6.0 },
+  { name: 'Chakli', energy_kcal: 490, protein_g: 8.5, carbs_g: 58.0, fat_g: 25.0 },
+  { name: 'Murukku', energy_kcal: 480, protein_g: 8.0, carbs_g: 57.0, fat_g: 23.0 },
+  { name: 'Mathri', energy_kcal: 485, protein_g: 8.0, carbs_g: 58.0, fat_g: 24.0 },
+  { name: 'Papdi', energy_kcal: 430, protein_g: 7.5, carbs_g: 55.0, fat_g: 20.0 },
+  { name: 'Sev', energy_kcal: 520, protein_g: 12.0, carbs_g: 58.0, fat_g: 27.0 },
+  { name: 'Namkeen Mixture', energy_kcal: 510, protein_g: 11.0, carbs_g: 56.0, fat_g: 27.0 },
+  // ── Non-Veg ───────────────────────────────────────────────────────────────
+  { name: 'Chicken Curry', energy_kcal: 185, protein_g: 17.5, carbs_g: 5.0, fat_g: 10.5 },
+  { name: 'Butter Chicken', energy_kcal: 220, protein_g: 18.0, carbs_g: 8.0, fat_g: 13.0 },
+  { name: 'Chicken Tikka Masala', energy_kcal: 230, protein_g: 18.5, carbs_g: 9.0, fat_g: 13.5 },
+  { name: 'Chicken Tikka', energy_kcal: 195, protein_g: 22.0, carbs_g: 3.0, fat_g: 10.5 },
+  { name: 'Tandoori Chicken', energy_kcal: 185, protein_g: 22.5, carbs_g: 2.5, fat_g: 9.5 },
+  { name: 'Chicken Biryani', energy_kcal: 200, protein_g: 11.0, carbs_g: 28.0, fat_g: 5.0 },
+  { name: 'Egg Curry', energy_kcal: 165, protein_g: 9.5, carbs_g: 5.5, fat_g: 11.5 },
+  { name: 'Mutton Curry', energy_kcal: 230, protein_g: 18.0, carbs_g: 5.5, fat_g: 15.0 },
+  { name: 'Fish Curry', energy_kcal: 165, protein_g: 16.5, carbs_g: 4.5, fat_g: 8.5 },
+  { name: 'Prawn Masala', energy_kcal: 170, protein_g: 18.5, carbs_g: 4.5, fat_g: 8.5 },
+  { name: 'Keema Matar', energy_kcal: 205, protein_g: 16.5, carbs_g: 9.0, fat_g: 12.0 },
+  { name: 'Chicken Seekh Kebab', energy_kcal: 215, protein_g: 21.0, carbs_g: 4.5, fat_g: 12.0 },
+  { name: 'Boiled Egg', energy_kcal: 155, protein_g: 13.0, carbs_g: 1.1, fat_g: 11.0 },
+  { name: 'Omelette (2 eggs)', energy_kcal: 185, protein_g: 13.5, carbs_g: 1.5, fat_g: 14.0 },
+  { name: 'Scrambled Eggs', energy_kcal: 175, protein_g: 12.5, carbs_g: 1.5, fat_g: 13.5 },
+  // ── Dairy & Paneer ────────────────────────────────────────────────────────
+  { name: 'Paneer (Cottage Cheese)', energy_kcal: 265, protein_g: 18.3, carbs_g: 1.2, fat_g: 20.8 },
+  { name: 'Dahi (Curd / Yogurt)', energy_kcal: 98, protein_g: 3.1, carbs_g: 4.7, fat_g: 4.3 },
+  { name: 'Raita', energy_kcal: 75, protein_g: 3.5, carbs_g: 6.5, fat_g: 3.5 },
+  { name: 'Lassi (Sweet)', energy_kcal: 105, protein_g: 3.5, carbs_g: 15.5, fat_g: 3.5 },
+  { name: 'Lassi (Salted)', energy_kcal: 80, protein_g: 3.5, carbs_g: 8.5, fat_g: 3.5 },
+  { name: 'Buttermilk (Chaas)', energy_kcal: 40, protein_g: 1.5, carbs_g: 4.5, fat_g: 1.5 },
+  { name: 'Full Fat Milk', energy_kcal: 61, protein_g: 3.2, carbs_g: 4.8, fat_g: 3.3 },
+  { name: 'Toned Milk', energy_kcal: 44, protein_g: 3.1, carbs_g: 4.6, fat_g: 1.5 },
+  { name: 'Skimmed Milk', energy_kcal: 35, protein_g: 3.5, carbs_g: 5.0, fat_g: 0.1 },
+  { name: 'Khoya (Mawa)', energy_kcal: 421, protein_g: 14.0, carbs_g: 30.0, fat_g: 28.0 },
+  { name: 'Ghee', energy_kcal: 900, protein_g: 0.0, carbs_g: 0.0, fat_g: 99.5 },
+  { name: 'Butter', energy_kcal: 717, protein_g: 0.9, carbs_g: 0.1, fat_g: 81.0 },
+  { name: 'Cream', energy_kcal: 340, protein_g: 2.1, carbs_g: 3.0, fat_g: 35.0 },
+  // ── Sweets & Desserts ─────────────────────────────────────────────────────
+  { name: 'Gulab Jamun', energy_kcal: 380, protein_g: 5.5, carbs_g: 56.0, fat_g: 15.0 },
+  { name: 'Rasgulla', energy_kcal: 186, protein_g: 4.5, carbs_g: 34.0, fat_g: 3.5 },
+  { name: 'Jalebi', energy_kcal: 430, protein_g: 4.0, carbs_g: 73.0, fat_g: 14.0 },
+  { name: 'Barfi (Milk Barfi)', energy_kcal: 405, protein_g: 8.5, carbs_g: 55.0, fat_g: 17.0 },
+  { name: 'Halwa (Sooji)', energy_kcal: 330, protein_g: 4.5, carbs_g: 52.0, fat_g: 12.0 },
+  { name: 'Gajar Ka Halwa', energy_kcal: 285, protein_g: 4.5, carbs_g: 38.0, fat_g: 13.0 },
+  { name: 'Kheer (Rice Pudding)', energy_kcal: 185, protein_g: 4.5, carbs_g: 27.0, fat_g: 7.0 },
+  { name: 'Peda', energy_kcal: 440, protein_g: 9.0, carbs_g: 57.0, fat_g: 20.0 },
+  { name: 'Ladoo (Besan)', energy_kcal: 480, protein_g: 9.0, carbs_g: 60.0, fat_g: 23.0 },
+  { name: 'Ladoo (Motichur)', energy_kcal: 450, protein_g: 7.5, carbs_g: 64.0, fat_g: 19.0 },
+  { name: 'Mysore Pak', energy_kcal: 530, protein_g: 8.0, carbs_g: 60.0, fat_g: 28.0 },
+  { name: 'Rasmalai', energy_kcal: 195, protein_g: 6.5, carbs_g: 24.0, fat_g: 8.5 },
+  { name: 'Shrikhand', energy_kcal: 245, protein_g: 5.5, carbs_g: 38.0, fat_g: 8.5 },
+  { name: 'Kulfi', energy_kcal: 215, protein_g: 5.0, carbs_g: 27.0, fat_g: 10.0 },
+  // ── Breakfast ─────────────────────────────────────────────────────────────
+  { name: 'Upma', energy_kcal: 175, protein_g: 4.5, carbs_g: 30.0, fat_g: 4.5 },
+  { name: 'Rava Upma', energy_kcal: 180, protein_g: 4.5, carbs_g: 31.0, fat_g: 4.5 },
+  { name: 'Sabudana Khichdi', energy_kcal: 300, protein_g: 4.5, carbs_g: 56.0, fat_g: 7.5 },
+  { name: 'Paratha with Curd', energy_kcal: 340, protein_g: 9.5, carbs_g: 52.0, fat_g: 12.0 },
+  { name: 'Anda Bhurji (Egg Bhurji)', energy_kcal: 185, protein_g: 12.5, carbs_g: 3.5, fat_g: 14.0 },
+  { name: 'Sheera', energy_kcal: 310, protein_g: 4.5, carbs_g: 48.0, fat_g: 11.0 },
+  { name: 'Vermicelli Upma (Semiya)', energy_kcal: 190, protein_g: 5.0, carbs_g: 34.0, fat_g: 4.5 },
+  // ── Raw Ingredients / Staples ─────────────────────────────────────────────
+  { name: 'Wheat Flour (Atta)', energy_kcal: 341, protein_g: 11.8, carbs_g: 69.4, fat_g: 1.7 },
+  { name: 'Maida (Refined Flour)', energy_kcal: 348, protein_g: 10.0, carbs_g: 73.0, fat_g: 1.0 },
+  { name: 'Rice (raw)', energy_kcal: 357, protein_g: 7.9, carbs_g: 78.2, fat_g: 0.5 },
+  { name: 'Moong Dal (raw)', energy_kcal: 347, protein_g: 24.0, carbs_g: 59.0, fat_g: 1.2 },
+  { name: 'Masoor Dal (raw)', energy_kcal: 338, protein_g: 25.0, carbs_g: 56.0, fat_g: 1.1 },
+  { name: 'Chana Dal (raw)', energy_kcal: 360, protein_g: 20.0, carbs_g: 59.0, fat_g: 5.0 },
+  { name: 'Urad Dal (raw)', energy_kcal: 341, protein_g: 24.0, carbs_g: 58.0, fat_g: 1.4 },
+  { name: 'Toor Dal (raw)', energy_kcal: 335, protein_g: 22.3, carbs_g: 57.6, fat_g: 1.7 },
+  { name: 'Rajma (raw)', energy_kcal: 333, protein_g: 22.0, carbs_g: 60.0, fat_g: 1.0 },
+  { name: 'Chickpeas (raw)', energy_kcal: 360, protein_g: 19.0, carbs_g: 61.0, fat_g: 6.0 },
+  { name: 'Semolina (Sooji/Rava)', energy_kcal: 360, protein_g: 12.0, carbs_g: 73.0, fat_g: 1.0 },
+  { name: 'Besan (Chickpea Flour)', energy_kcal: 387, protein_g: 22.0, carbs_g: 58.0, fat_g: 6.0 },
+  { name: 'Corn Flour', energy_kcal: 356, protein_g: 6.7, carbs_g: 80.0, fat_g: 1.2 },
+  { name: 'Oats', energy_kcal: 389, protein_g: 17.0, carbs_g: 66.0, fat_g: 7.0 },
+  { name: 'Sabudana (Tapioca Pearls)', energy_kcal: 355, protein_g: 0.2, carbs_g: 88.0, fat_g: 0.2 },
+  { name: 'Vermicelli (Semiya)', energy_kcal: 355, protein_g: 11.0, carbs_g: 74.0, fat_g: 1.5 },
+  // ── Vegetables (raw) ──────────────────────────────────────────────────────
+  { name: 'Potato (Aloo)', energy_kcal: 77, protein_g: 2.0, carbs_g: 17.0, fat_g: 0.1 },
+  { name: 'Onion (Pyaaz)', energy_kcal: 40, protein_g: 1.1, carbs_g: 9.3, fat_g: 0.1 },
+  { name: 'Tomato', energy_kcal: 18, protein_g: 0.9, carbs_g: 3.9, fat_g: 0.2 },
+  { name: 'Spinach (Palak)', energy_kcal: 23, protein_g: 2.9, carbs_g: 3.6, fat_g: 0.4 },
+  { name: 'Cauliflower (Gobi)', energy_kcal: 25, protein_g: 1.9, carbs_g: 5.0, fat_g: 0.3 },
+  { name: 'Cabbage (Patta Gobi)', energy_kcal: 25, protein_g: 1.3, carbs_g: 5.8, fat_g: 0.1 },
+  { name: 'Peas (Matar)', energy_kcal: 81, protein_g: 5.4, carbs_g: 14.5, fat_g: 0.4 },
+  { name: 'Carrot (Gajar)', energy_kcal: 41, protein_g: 0.9, carbs_g: 9.6, fat_g: 0.2 },
+  { name: 'Brinjal (Baingan)', energy_kcal: 25, protein_g: 1.0, carbs_g: 6.0, fat_g: 0.2 },
+  { name: 'Okra (Bhindi)', energy_kcal: 33, protein_g: 1.9, carbs_g: 7.5, fat_g: 0.1 },
+  { name: 'Bottle Gourd (Lauki)', energy_kcal: 14, protein_g: 0.6, carbs_g: 3.4, fat_g: 0.0 },
+  { name: 'Bitter Gourd (Karela)', energy_kcal: 17, protein_g: 1.0, carbs_g: 3.7, fat_g: 0.2 },
+  { name: 'Drumstick (Sahjan)', energy_kcal: 37, protein_g: 2.1, carbs_g: 8.5, fat_g: 0.2 },
+  { name: 'Taro (Arbi)', energy_kcal: 112, protein_g: 1.5, carbs_g: 26.5, fat_g: 0.2 },
+  { name: 'Sweet Potato (Shakarkandi)', energy_kcal: 86, protein_g: 1.6, carbs_g: 20.0, fat_g: 0.1 },
+  { name: 'Green Chilli', energy_kcal: 40, protein_g: 2.0, carbs_g: 9.5, fat_g: 0.2 },
+  { name: 'Ginger (Adrak)', energy_kcal: 80, protein_g: 1.8, carbs_g: 17.8, fat_g: 0.8 },
+  { name: 'Garlic (Lehsun)', energy_kcal: 149, protein_g: 6.4, carbs_g: 33.1, fat_g: 0.5 },
+  { name: 'Coriander Leaves (Dhaniya)', energy_kcal: 23, protein_g: 2.1, carbs_g: 3.7, fat_g: 0.5 },
+  { name: 'Cucumber (Kheera)', energy_kcal: 15, protein_g: 0.6, carbs_g: 3.6, fat_g: 0.1 },
+  // ── Fruits ────────────────────────────────────────────────────────────────
+  { name: 'Mango (Aam)', energy_kcal: 60, protein_g: 0.8, carbs_g: 15.0, fat_g: 0.4 },
+  { name: 'Banana (Kela)', energy_kcal: 89, protein_g: 1.1, carbs_g: 22.8, fat_g: 0.3 },
+  { name: 'Apple', energy_kcal: 52, protein_g: 0.3, carbs_g: 13.8, fat_g: 0.2 },
+  { name: 'Guava (Amrud)', energy_kcal: 68, protein_g: 2.6, carbs_g: 14.3, fat_g: 1.0 },
+  { name: 'Papaya (Papita)', energy_kcal: 43, protein_g: 0.5, carbs_g: 10.8, fat_g: 0.3 },
+  { name: 'Pomegranate (Anar)', energy_kcal: 83, protein_g: 1.7, carbs_g: 18.7, fat_g: 1.2 },
+  { name: 'Watermelon (Tarbooz)', energy_kcal: 30, protein_g: 0.6, carbs_g: 7.6, fat_g: 0.2 },
+  { name: 'Orange (Santra)', energy_kcal: 47, protein_g: 0.9, carbs_g: 11.8, fat_g: 0.1 },
+  { name: 'Grapes (Angoor)', energy_kcal: 69, protein_g: 0.7, carbs_g: 18.1, fat_g: 0.2 },
+  { name: 'Pineapple (Ananas)', energy_kcal: 50, protein_g: 0.5, carbs_g: 13.1, fat_g: 0.1 },
+  { name: 'Coconut (fresh)', energy_kcal: 354, protein_g: 3.3, carbs_g: 15.2, fat_g: 33.5 },
+  // ── Nuts & Seeds ──────────────────────────────────────────────────────────
+  { name: 'Almonds (Badam)', energy_kcal: 579, protein_g: 21.0, carbs_g: 22.0, fat_g: 50.0 },
+  { name: 'Cashews (Kaju)', energy_kcal: 553, protein_g: 18.0, carbs_g: 30.0, fat_g: 44.0 },
+  { name: 'Peanuts (Moongfali)', energy_kcal: 567, protein_g: 26.0, carbs_g: 16.0, fat_g: 49.0 },
+  { name: 'Walnuts (Akhrot)', energy_kcal: 654, protein_g: 15.0, carbs_g: 14.0, fat_g: 65.0 },
+  { name: 'Pistachios (Pista)', energy_kcal: 562, protein_g: 20.0, carbs_g: 28.0, fat_g: 45.0 },
+  { name: 'Raisins (Kishmish)', energy_kcal: 299, protein_g: 3.1, carbs_g: 79.0, fat_g: 0.5 },
+  { name: 'Dates (Khajur)', energy_kcal: 277, protein_g: 1.8, carbs_g: 75.0, fat_g: 0.2 },
+  { name: 'Flaxseeds (Alsi)', energy_kcal: 534, protein_g: 18.3, carbs_g: 28.9, fat_g: 42.2 },
+  { name: 'Sesame Seeds (Til)', energy_kcal: 573, protein_g: 17.7, carbs_g: 23.4, fat_g: 49.7 },
+  { name: 'Chia Seeds', energy_kcal: 486, protein_g: 17.0, carbs_g: 42.1, fat_g: 30.7 },
+  // ── Oils ──────────────────────────────────────────────────────────────────
+  { name: 'Ghee', energy_kcal: 900, protein_g: 0.0, carbs_g: 0.0, fat_g: 99.5 },
+  { name: 'Butter', energy_kcal: 717, protein_g: 0.9, carbs_g: 0.1, fat_g: 81.0 },
+  { name: 'Mustard Oil (Sarson Tel)', energy_kcal: 884, protein_g: 0.0, carbs_g: 0.0, fat_g: 100.0 },
+  { name: 'Coconut Oil', energy_kcal: 892, protein_g: 0.0, carbs_g: 0.0, fat_g: 99.1 },
+  { name: 'Sunflower Oil', energy_kcal: 884, protein_g: 0.0, carbs_g: 0.0, fat_g: 100.0 },
+  { name: 'Olive Oil', energy_kcal: 884, protein_g: 0.0, carbs_g: 0.0, fat_g: 100.0 },
+  // ── Beverages ─────────────────────────────────────────────────────────────
+  { name: 'Masala Chai (with milk & sugar)', energy_kcal: 55, protein_g: 1.5, carbs_g: 8.0, fat_g: 1.5 },
+  { name: 'Black Tea', energy_kcal: 2, protein_g: 0.0, carbs_g: 0.5, fat_g: 0.0 },
+  { name: 'Black Coffee', energy_kcal: 2, protein_g: 0.3, carbs_g: 0.0, fat_g: 0.0 },
+  { name: 'Filter Coffee', energy_kcal: 60, protein_g: 2.0, carbs_g: 7.0, fat_g: 2.5 },
+  { name: 'Nimbu Pani (Lemon Water)', energy_kcal: 25, protein_g: 0.2, carbs_g: 6.5, fat_g: 0.0 },
+  { name: 'Coconut Water', energy_kcal: 19, protein_g: 0.7, carbs_g: 3.7, fat_g: 0.2 },
+  { name: 'Sugarcane Juice', energy_kcal: 63, protein_g: 0.2, carbs_g: 15.6, fat_g: 0.3 },
+  { name: 'Mango Lassi', energy_kcal: 125, protein_g: 3.5, carbs_g: 20.0, fat_g: 3.5 },
+  { name: 'Full Fat Milk', energy_kcal: 61, protein_g: 3.2, carbs_g: 4.8, fat_g: 3.3 },
+  { name: 'Protein Shake (Whey)', energy_kcal: 120, protein_g: 24.0, carbs_g: 3.5, fat_g: 1.5 },
+  // ── Global Staples ────────────────────────────────────────────────────────
+  { name: 'White Bread', energy_kcal: 265, protein_g: 9.0, carbs_g: 49.0, fat_g: 3.2 },
+  { name: 'Brown Bread', energy_kcal: 247, protein_g: 10.5, carbs_g: 44.0, fat_g: 3.5 },
+  { name: 'Pasta (cooked)', energy_kcal: 131, protein_g: 5.0, carbs_g: 25.0, fat_g: 1.1 },
+  { name: 'Noodles (cooked)', energy_kcal: 138, protein_g: 4.5, carbs_g: 25.0, fat_g: 2.0 },
+  { name: 'Maggi (cooked)', energy_kcal: 205, protein_g: 5.5, carbs_g: 32.0, fat_g: 7.0 },
+  { name: 'Pizza (Margherita)', energy_kcal: 266, protein_g: 11.0, carbs_g: 33.0, fat_g: 10.0 },
+  { name: 'Burger (Veg)', energy_kcal: 295, protein_g: 8.0, carbs_g: 40.0, fat_g: 12.0 },
+  { name: 'Burger (Chicken)', energy_kcal: 325, protein_g: 15.0, carbs_g: 38.0, fat_g: 13.0 },
+  { name: 'French Fries', energy_kcal: 312, protein_g: 3.4, carbs_g: 41.0, fat_g: 15.0 },
+  { name: 'Sandwich (Veg)', energy_kcal: 220, protein_g: 7.5, carbs_g: 35.0, fat_g: 6.5 },
+  { name: 'Sandwich (Chicken)', energy_kcal: 260, protein_g: 15.0, carbs_g: 32.0, fat_g: 8.0 },
+  // ── Protein Sources ───────────────────────────────────────────────────────
+  { name: 'Chicken Breast (cooked)', energy_kcal: 165, protein_g: 31.0, carbs_g: 0.0, fat_g: 3.6 },
+  { name: 'Chicken Leg (cooked)', energy_kcal: 184, protein_g: 26.0, carbs_g: 0.0, fat_g: 8.5 },
+  { name: 'Tuna (canned)', energy_kcal: 116, protein_g: 25.5, carbs_g: 0.0, fat_g: 1.0 },
+  { name: 'Salmon (cooked)', energy_kcal: 208, protein_g: 28.0, carbs_g: 0.0, fat_g: 9.0 },
+  { name: 'Whey Protein Powder', energy_kcal: 374, protein_g: 72.0, carbs_g: 12.0, fat_g: 6.5 },
+  { name: 'Soya Chunks (cooked)', energy_kcal: 143, protein_g: 17.5, carbs_g: 15.0, fat_g: 1.0 },
+  { name: 'Tofu', energy_kcal: 76, protein_g: 8.0, carbs_g: 1.9, fat_g: 4.8 },
+  { name: 'Whole Egg', energy_kcal: 155, protein_g: 13.0, carbs_g: 1.1, fat_g: 11.0 },
+  { name: 'Egg White', energy_kcal: 52, protein_g: 11.0, carbs_g: 0.7, fat_g: 0.2 },
+  // ── South Indian ──────────────────────────────────────────────────────────
+  { name: 'Rasam', energy_kcal: 40, protein_g: 1.5, carbs_g: 6.5, fat_g: 1.0 },
+  { name: 'Avial', energy_kcal: 120, protein_g: 3.0, carbs_g: 14.0, fat_g: 6.0 },
+  { name: 'Pongal', energy_kcal: 175, protein_g: 5.5, carbs_g: 30.0, fat_g: 4.5 },
+  { name: 'Bisibelebath', energy_kcal: 165, protein_g: 6.5, carbs_g: 28.0, fat_g: 4.0 },
+  { name: 'Coconut Chutney', energy_kcal: 155, protein_g: 2.5, carbs_g: 7.0, fat_g: 13.0 },
+  // ── Punjabi / North Indian ────────────────────────────────────────────────
+  { name: 'Chole Bhature', energy_kcal: 365, protein_g: 10.5, carbs_g: 55.0, fat_g: 12.0 },
+  { name: 'Makki Ki Roti', energy_kcal: 320, protein_g: 8.0, carbs_g: 60.0, fat_g: 6.0 },
+  { name: 'Amritsari Kulcha', energy_kcal: 340, protein_g: 8.5, carbs_g: 54.0, fat_g: 11.0 },
+  // ── Bengali ───────────────────────────────────────────────────────────────
+  { name: 'Macher Jhol (Fish Curry)', energy_kcal: 165, protein_g: 16.0, carbs_g: 4.5, fat_g: 8.5 },
+  { name: 'Aloo Posto', energy_kcal: 145, protein_g: 2.5, carbs_g: 19.0, fat_g: 7.0 },
+  { name: 'Mishti Doi', energy_kcal: 130, protein_g: 4.5, carbs_g: 20.0, fat_g: 4.0 },
+  { name: 'Sandesh', energy_kcal: 255, protein_g: 7.0, carbs_g: 35.0, fat_g: 10.5 },
+  // ── Gujarati ──────────────────────────────────────────────────────────────
+  { name: 'Undhiyu', energy_kcal: 185, protein_g: 5.5, carbs_g: 22.0, fat_g: 9.0 },
+  { name: 'Fafda', energy_kcal: 455, protein_g: 11.0, carbs_g: 52.0, fat_g: 23.0 },
+  { name: 'Dal Dhokli', energy_kcal: 155, protein_g: 6.5, carbs_g: 24.0, fat_g: 4.0 },
+  // ── Rajasthani ────────────────────────────────────────────────────────────
+  { name: 'Dal Baati Churma', energy_kcal: 450, protein_g: 12.5, carbs_g: 58.0, fat_g: 20.0 },
+  { name: 'Gatte Ki Sabzi', energy_kcal: 195, protein_g: 8.5, carbs_g: 20.0, fat_g: 10.0 },
+  { name: 'Pyaaz Kachori', energy_kcal: 380, protein_g: 7.0, carbs_g: 47.0, fat_g: 18.0 },
+  // ── Maharashtra ───────────────────────────────────────────────────────────
+  { name: 'Puran Poli', energy_kcal: 345, protein_g: 7.5, carbs_g: 60.0, fat_g: 9.0 },
+  { name: 'Modak (Steamed)', energy_kcal: 245, protein_g: 4.0, carbs_g: 45.0, fat_g: 6.0 },
+  { name: 'Thalipeeth', energy_kcal: 285, protein_g: 9.5, carbs_g: 45.0, fat_g: 8.5 },
+  // ── Packaged ──────────────────────────────────────────────────────────────
+  { name: 'Corn Flakes', energy_kcal: 357, protein_g: 7.5, carbs_g: 84.0, fat_g: 0.4 },
+  { name: 'Muesli', energy_kcal: 373, protein_g: 10.0, carbs_g: 67.0, fat_g: 7.5 },
+  { name: 'Oats', energy_kcal: 389, protein_g: 17.0, carbs_g: 66.0, fat_g: 7.0 },
+  { name: 'Biscuit (Marie)', energy_kcal: 420, protein_g: 8.0, carbs_g: 75.0, fat_g: 10.0 },
+  { name: 'Parle-G Biscuit', energy_kcal: 450, protein_g: 7.0, carbs_g: 76.0, fat_g: 14.0 },
+  // ── Condiments ────────────────────────────────────────────────────────────
+  { name: 'Green Chutney (Mint-Coriander)', energy_kcal: 55, protein_g: 2.0, carbs_g: 7.5, fat_g: 2.0 },
+  { name: 'Tamarind Chutney', energy_kcal: 145, protein_g: 0.8, carbs_g: 37.0, fat_g: 0.3 },
+  { name: 'Pickle (Mango Achar)', energy_kcal: 130, protein_g: 1.0, carbs_g: 9.0, fat_g: 10.0 },
+  { name: 'Tomato Ketchup', energy_kcal: 100, protein_g: 1.0, carbs_g: 25.0, fat_g: 0.1 },
+  { name: 'Peanut Butter', energy_kcal: 598, protein_g: 25.0, carbs_g: 20.0, fat_g: 51.0 },
+  { name: 'Honey', energy_kcal: 304, protein_g: 0.3, carbs_g: 82.4, fat_g: 0.0 },
+  { name: 'Sugar', energy_kcal: 387, protein_g: 0.0, carbs_g: 100.0, fat_g: 0.0 },
+  { name: 'Jaggery (Gur)', energy_kcal: 383, protein_g: 0.4, carbs_g: 98.0, fat_g: 0.1 },
+];
+
+async function seed() {
+  console.log(`\n🌱  Seeding ${SEED_FOODS.length} foods into Supabase...\n`);
+
+  const BATCH = 50;
+  let inserted = 0;
+  let batchNum = 0;
+
+  for (let i = 0; i < SEED_FOODS.length; i += BATCH) {
+    batchNum++;
+    const batch = SEED_FOODS.slice(i, i + BATCH).map(f => ({
+      name: f.name,
+      brand: f.brand ?? '',
+      energy_kcal: f.energy_kcal,
+      protein_g: f.protein_g,
+      carbs_g: f.carbs_g,
+      fat_g: f.fat_g,
+      source: 'seed',
+    }));
+
+    const { error } = await supabase
+      .from('foods')
+      .upsert(batch, { onConflict: 'name', ignoreDuplicates: true });
+
+    if (error) {
+      console.error(`  ✗ Batch ${batchNum} failed:`, error.message);
+    } else {
+      inserted += batch.length;
+      console.log(`  ✓ Batch ${batchNum} done — ${inserted}/${SEED_FOODS.length} foods`);
+    }
+  }
+
+  // Verify
+  const { count } = await supabase
+    .from('foods')
+    .select('*', { count: 'exact', head: true });
+
+  console.log(`\n✅  Done! Total foods in DB: ${count}\n`);
+}
+
+seed().catch(err => {
+  console.error('❌ Seed failed:', err.message);
+  process.exit(1);
+});
