@@ -17,6 +17,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import exercisesData from '@/lib/data/exercises.json';
 import type { ActiveExercise, ActiveSet, Exercise } from '@/lib/types';
 import ExerciseSearch from './ExerciseSearch';
+import AnimatedProgressBar from '@/components/ui/AnimatedProgressBar';
 
 // ─── Isolated GIF panel ──────────────────────────────────────────────────────
 // Wrapped in memo so parent re-renders (timers, set state) never touch this
@@ -251,7 +252,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
       <View style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
         {/* Header */}
-        <LinearGradient colors={['#1E1B4B', '#3730A3']} style={{ paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16 }}>
+        <LinearGradient colors={['#0F172A', '#1E293B']} style={{ paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <TouchableOpacity onPress={handleClose} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' }}>
               <Ionicons name="close" size={20} color="rgba(255,255,255,0.8)" />
@@ -283,8 +284,8 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
           <View style={{ backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', padding: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="timer" size={14} color="#6366F1" />
-                <Text style={{ color: '#6366F1', fontWeight: '700', fontSize: 13 }}>Rest Timer</Text>
+                <Ionicons name="timer" size={14} color="#059669" />
+                <Text style={{ color: '#059669', fontWeight: '700', fontSize: 13 }}>Rest Timer</Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={{ color: '#0F172A', fontWeight: '800', fontSize: 18, fontVariant: ['tabular-nums'] as any }}>{formatTime(restRemaining)}</Text>
@@ -294,13 +295,11 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
               </View>
             </View>
             {/* Progress bar */}
-            <View style={{ height: 5, backgroundColor: '#EEF2FF', borderRadius: 3, overflow: 'hidden' }}>
-              <View style={{ height: '100%', backgroundColor: restRemaining === 0 ? '#10B981' : '#6366F1', borderRadius: 3, width: `${restPct * 100}%` }} />
-            </View>
+            <AnimatedProgressBar percent={restPct * 100} height={5} trackColor="#ECFDF5" color={restRemaining === 0 ? '#10B981' : '#059669'} />
             {/* Preset buttons */}
             <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
               {REST_PRESETS.map((s) => (
-                <TouchableOpacity key={s} onPress={() => startRestTimer(s)} style={{ flex: 1, paddingVertical: 4, borderRadius: 8, backgroundColor: restTotal === s && restActive ? '#6366F1' : '#F1F5F9', alignItems: 'center' }}>
+                <TouchableOpacity key={s} onPress={() => startRestTimer(s)} style={{ flex: 1, paddingVertical: 4, borderRadius: 8, backgroundColor: restTotal === s && restActive ? '#059669' : '#F1F5F9', alignItems: 'center' }}>
                   <Text style={{ fontSize: 11, fontWeight: '700', color: restTotal === s && restActive ? 'white' : '#64748B' }}>{s}s</Text>
                 </TouchableOpacity>
               ))}
@@ -311,8 +310,8 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 14, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
           {exercises.length === 0 && (
             <View style={{ alignItems: 'center', paddingVertical: 48, gap: 10 }}>
-              <View style={{ width: 64, height: 64, backgroundColor: '#EEF2FF', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="barbell-outline" size={30} color="#6366F1" />
+              <View style={{ width: 64, height: 64, backgroundColor: '#ECFDF5', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="barbell-outline" size={30} color="#059669" />
               </View>
               <Text style={{ color: '#1E293B', fontWeight: '700', fontSize: 16 }}>Add your first exercise</Text>
               <Text style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', paddingHorizontal: 32 }}>
@@ -338,8 +337,8 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
                       resizeMode="cover"
                     />
                   ) : (
-                    <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons name="barbell-outline" size={18} color="#6366F1" />
+                    <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="barbell-outline" size={18} color="#059669" />
                     </View>
                   )}
                   <View style={{ flex: 1 }}>
@@ -349,7 +348,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
                       {ex.gifUrl && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                           <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: '#CBD5E1' }} />
-                          <Text style={{ color: '#6366F1', fontSize: 10, fontWeight: '600' }}>
+                          <Text style={{ color: '#059669', fontSize: 10, fontWeight: '600' }}>
                             {expandedGifId === ex.id ? 'Hide demo' : 'See demo'}
                           </Text>
                         </View>
@@ -362,7 +361,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
                     <Ionicons
                       name={expandedGifId === ex.id ? 'chevron-up' : 'play-circle-outline'}
                       size={18}
-                      color="#6366F1"
+                      color="#059669"
                     />
                   )}
                   <TouchableOpacity onPress={() => removeExercise(ex.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -409,9 +408,9 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
                   />
                   {/* RPE input */}
                   <TextInput
-                    style={{ width: 44, textAlign: 'center', color: '#6366F1', fontSize: 13, fontWeight: '700', backgroundColor: '#EEF2FF', borderRadius: 8, paddingVertical: 5, marginHorizontal: 2 }}
+                    style={{ width: 44, textAlign: 'center', color: '#059669', fontSize: 13, fontWeight: '700', backgroundColor: '#ECFDF5', borderRadius: 8, paddingVertical: 5, marginHorizontal: 2 }}
                     placeholder="—"
-                    placeholderTextColor="#C7D2FE"
+                    placeholderTextColor="#A7F3D0"
                     value={set.rpe}
                     onChangeText={(v) => updateSet(ex.id, set.id, 'rpe', v)}
                     keyboardType="decimal-pad"
@@ -430,8 +429,8 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
 
               {/* Add set */}
               <TouchableOpacity onPress={() => addSet(ex.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 12 }}>
-                <Ionicons name="add-circle-outline" size={18} color="#6366F1" />
-                <Text style={{ color: '#6366F1', fontWeight: '600', fontSize: 13 }}>Add Set</Text>
+                <Ionicons name="add-circle-outline" size={18} color="#059669" />
+                <Text style={{ color: '#059669', fontWeight: '600', fontSize: 13 }}>Add Set</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -439,10 +438,10 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
           {/* Add exercise button */}
           <TouchableOpacity
             onPress={() => setShowExerciseSearch(true)}
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 2, borderStyle: 'dashed', borderColor: '#C7D2FE', borderRadius: 18, paddingVertical: 16, backgroundColor: '#EEF2FF' }}
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 2, borderStyle: 'dashed', borderColor: '#A7F3D0', borderRadius: 18, paddingVertical: 16, backgroundColor: '#ECFDF5' }}
           >
-            <Ionicons name="add" size={22} color="#6366F1" />
-            <Text style={{ color: '#6366F1', fontWeight: '700', fontSize: 15 }}>Add Exercise</Text>
+            <Ionicons name="add" size={22} color="#059669" />
+            <Text style={{ color: '#059669', fontWeight: '700', fontSize: 15 }}>Add Exercise</Text>
           </TouchableOpacity>
 
           {/* Rest timer manual trigger */}

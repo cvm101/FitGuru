@@ -1,6 +1,19 @@
 import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import Svg, { Path, Line, Circle, Text as SvgText, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { BodyWeightLog } from '@/lib/types';
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+function usePressScale(to = 0.95) {
+  const scale = useSharedValue(1);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return {
+    style,
+    onPressIn: () => { scale.value = withSpring(to, { damping: 15, stiffness: 300 }); },
+    onPressOut: () => { scale.value = withSpring(1, { damping: 12, stiffness: 200 }); },
+  };
+}
 
 interface BodyWeightChartProps {
   logs: BodyWeightLog[];
@@ -13,16 +26,21 @@ const H = 140;
 const PAD = { top: 16, bottom: 28, left: 32, right: 12 };
 
 export default function BodyWeightChart({ logs, goalWeight, onAdd }: BodyWeightChartProps) {
+  const emptyPress = usePressScale();
+  const addPress = usePressScale();
+
   if (logs.length === 0) {
     return (
-      <TouchableOpacity
+      <AnimatedTouchable
         onPress={onAdd}
-        style={{ alignItems: 'center', padding: 24, backgroundColor: '#F8FAFC', borderRadius: 16, borderWidth: 1.5, borderColor: '#E2E8F0', borderStyle: 'dashed', gap: 8 }}
+        onPressIn={emptyPress.onPressIn}
+        onPressOut={emptyPress.onPressOut}
+        style={[{ alignItems: 'center', padding: 24, backgroundColor: '#F8FAFC', borderRadius: 16, borderWidth: 1.5, borderColor: '#E2E8F0', borderStyle: 'dashed', gap: 8 }, emptyPress.style]}
       >
         <Text style={{ fontSize: 28 }}>⚖️</Text>
         <Text style={{ color: '#475569', fontWeight: '700', fontSize: 14 }}>No weight logged yet</Text>
         <Text style={{ color: '#94A3B8', fontSize: 12 }}>Tap to log today's weight</Text>
-      </TouchableOpacity>
+      </AnimatedTouchable>
     );
   }
 
@@ -70,12 +88,14 @@ export default function BodyWeightChart({ logs, goalWeight, onAdd }: BodyWeightC
             </Text>
           )}
         </View>
-        <TouchableOpacity
+        <AnimatedTouchable
           onPress={onAdd}
-          style={{ backgroundColor: '#ECFDF5', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+          onPressIn={addPress.onPressIn}
+          onPressOut={addPress.onPressOut}
+          style={[{ backgroundColor: '#ECFDF5', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 4 }, addPress.style]}
         >
           <Text style={{ color: '#059669', fontSize: 13, fontWeight: '700' }}>+ Log weight</Text>
-        </TouchableOpacity>
+        </AnimatedTouchable>
       </View>
 
       {/* SVG Chart */}

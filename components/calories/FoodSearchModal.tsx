@@ -17,13 +17,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { searchOpenFoodFacts } from '@/lib/queries/calories';
 import type { OpenFoodFactsProduct, MealType } from '@/lib/types';
 
-const MEAL_COLORS: Record<MealType, string> = {
-  breakfast: '#F59E0B',
-  lunch: '#3B82F6',
-  dinner: '#6366F1',
-  snack: '#10B981',
-};
-
 const DEBOUNCE_MS = 400; // wait this long after last keystroke before firing
 
 interface Props {
@@ -106,7 +99,6 @@ export default function FoodSearchModal({ visible, mealType, onSelect, onClose }
   // AbortController for the current fetch — cancelled when a new search starts
   const abortRef = useRef<AbortController | null>(null);
 
-  const accentColor = MEAL_COLORS[mealType];
   const mealLabel = mealType.charAt(0).toUpperCase() + mealType.slice(1);
 
   // ── Live search triggered by text change ──────────────────────────────────
@@ -215,7 +207,7 @@ export default function FoodSearchModal({ visible, mealType, onSelect, onClose }
             />
             {/* Right side: spinner while fetching, or clear button when there's text */}
             {loading ? (
-              <ActivityIndicator size="small" color={accentColor} style={{ marginLeft: 6 }} />
+              <ActivityIndicator size="small" color="#059669" style={{ marginLeft: 6 }} />
             ) : query.length > 0 ? (
               <TouchableOpacity onPress={() => handleTextChange('')}>
                 <Ionicons name="close-circle" size={18} color="#94A3B8" />

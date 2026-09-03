@@ -10,7 +10,7 @@ export const WORKOUT_SPLITS: WorkoutSplit[] = [
     frequency: '6 days/week',
     level: 'Intermediate',
     bestFor: 'Muscle growth & strength',
-    color: '#10B981',
+    color: '#059669',
     days: [
       {
         name: 'Push',
@@ -62,7 +62,7 @@ export const WORKOUT_SPLITS: WorkoutSplit[] = [
     frequency: '4 days/week',
     level: 'Intermediate',
     bestFor: 'Strength & hypertrophy',
-    color: '#3B82F6',
+    color: '#3B6E91',
     days: [
       {
         name: 'Upper A (Strength)',
@@ -123,7 +123,7 @@ export const WORKOUT_SPLITS: WorkoutSplit[] = [
     frequency: '3 days/week',
     level: 'Beginner',
     bestFor: 'Beginners & fat loss',
-    color: '#F59E0B',
+    color: '#B8860B',
     days: [
       {
         name: 'Day A',
@@ -172,7 +172,7 @@ export const WORKOUT_SPLITS: WorkoutSplit[] = [
     frequency: '6 days/week',
     level: 'Advanced',
     bestFor: 'Advanced hypertrophy',
-    color: '#8B5CF6',
+    color: '#6D5BA6',
     days: [
       {
         name: 'Chest & Back',
@@ -224,7 +224,7 @@ export const WORKOUT_SPLITS: WorkoutSplit[] = [
     frequency: '5 days/week',
     level: 'Intermediate',
     bestFor: 'Bodybuilding & volume',
-    color: '#EF4444',
+    color: '#B85450',
     days: [
       {
         name: 'Chest Day',
@@ -301,7 +301,7 @@ export const WORKOUT_SPLITS: WorkoutSplit[] = [
     frequency: '4 days/week',
     level: 'Intermediate',
     bestFor: 'Strength & size',
-    color: '#EC4899',
+    color: '#A85C7C',
     days: [
       {
         name: 'Upper Power',

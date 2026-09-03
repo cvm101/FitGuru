@@ -1,5 +1,6 @@
 import { TouchableOpacity, Text, ActivityIndicator, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 interface ButtonProps {
   title: string;
@@ -28,6 +29,11 @@ export default function Button({
   const radius = 16;
   const opacity = disabled || loading ? 0.6 : 1;
 
+  const scale = useSharedValue(1);
+  const pressStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const pressIn = () => { scale.value = withSpring(0.96, { damping: 15, stiffness: 300 }); };
+  const pressOut = () => { scale.value = withSpring(1, { damping: 12, stiffness: 200 }); };
+
   const inner = (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
       {loading ? (
@@ -43,45 +49,51 @@ export default function Button({
 
   if (variant === 'primary') {
     return (
-      <TouchableOpacity onPress={onPress} disabled={disabled || loading} activeOpacity={0.82} style={{ opacity, width: fullWidth ? '100%' : undefined }}>
-        <LinearGradient
-          colors={['#059669', '#10B981']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{ borderRadius: radius, paddingVertical: paddingV, paddingHorizontal: paddingH, alignItems: 'center', justifyContent: 'center', shadowColor: '#10B981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 }}
-        >
-          {inner}
-        </LinearGradient>
+      <TouchableOpacity onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} disabled={disabled || loading} activeOpacity={0.9} style={{ opacity, width: fullWidth ? '100%' : undefined }}>
+        <Animated.View style={pressStyle}>
+          <LinearGradient
+            colors={['#059669', '#10B981']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ borderRadius: radius, paddingVertical: paddingV, paddingHorizontal: paddingH, alignItems: 'center', justifyContent: 'center', shadowColor: '#10B981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 }}
+          >
+            {inner}
+          </LinearGradient>
+        </Animated.View>
       </TouchableOpacity>
     );
   }
 
   if (variant === 'dark') {
     return (
-      <TouchableOpacity onPress={onPress} disabled={disabled || loading} activeOpacity={0.82} style={{ opacity, width: fullWidth ? '100%' : undefined }}>
-        <LinearGradient
-          colors={['#1E293B', '#334155']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{ borderRadius: radius, paddingVertical: paddingV, paddingHorizontal: paddingH, alignItems: 'center', justifyContent: 'center' }}
-        >
-          {inner}
-        </LinearGradient>
+      <TouchableOpacity onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} disabled={disabled || loading} activeOpacity={0.9} style={{ opacity, width: fullWidth ? '100%' : undefined }}>
+        <Animated.View style={pressStyle}>
+          <LinearGradient
+            colors={['#1E293B', '#334155']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ borderRadius: radius, paddingVertical: paddingV, paddingHorizontal: paddingH, alignItems: 'center', justifyContent: 'center' }}
+          >
+            {inner}
+          </LinearGradient>
+        </Animated.View>
       </TouchableOpacity>
     );
   }
 
   if (variant === 'danger') {
     return (
-      <TouchableOpacity onPress={onPress} disabled={disabled || loading} activeOpacity={0.82} style={{ opacity, width: fullWidth ? '100%' : undefined }}>
-        <LinearGradient
-          colors={['#DC2626', '#EF4444']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{ borderRadius: radius, paddingVertical: paddingV, paddingHorizontal: paddingH, alignItems: 'center', justifyContent: 'center', shadowColor: '#EF4444', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 }}
-        >
-          {inner}
-        </LinearGradient>
+      <TouchableOpacity onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} disabled={disabled || loading} activeOpacity={0.9} style={{ opacity, width: fullWidth ? '100%' : undefined }}>
+        <Animated.View style={pressStyle}>
+          <LinearGradient
+            colors={['#DC2626', '#EF4444']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ borderRadius: radius, paddingVertical: paddingV, paddingHorizontal: paddingH, alignItems: 'center', justifyContent: 'center', shadowColor: '#EF4444', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 }}
+          >
+            {inner}
+          </LinearGradient>
+        </Animated.View>
       </TouchableOpacity>
     );
   }
@@ -90,25 +102,32 @@ export default function Button({
     return (
       <TouchableOpacity
         onPress={onPress}
+        onPressIn={pressIn}
+        onPressOut={pressOut}
         disabled={disabled || loading}
-        activeOpacity={0.82}
-        style={{
-          opacity,
-          width: fullWidth ? '100%' : undefined,
-          borderRadius: radius,
-          paddingVertical: paddingV,
-          paddingHorizontal: paddingH,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#ECFDF5',
-          borderWidth: 1.5,
-          borderColor: '#10B981',
-        }}
+        activeOpacity={0.9}
+        style={{ opacity, width: fullWidth ? '100%' : undefined }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {icon}
-          <Text style={{ color: '#059669', fontWeight: '700', fontSize }}>{title}</Text>
-        </View>
+        <Animated.View
+          style={[
+            {
+              borderRadius: radius,
+              paddingVertical: paddingV,
+              paddingHorizontal: paddingH,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#ECFDF5',
+              borderWidth: 1.5,
+              borderColor: '#10B981',
+            },
+            pressStyle,
+          ]}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {icon}
+            <Text style={{ color: '#059669', fontWeight: '700', fontSize }}>{title}</Text>
+          </View>
+        </Animated.View>
       </TouchableOpacity>
     );
   }
@@ -117,25 +136,32 @@ export default function Button({
   return (
     <TouchableOpacity
       onPress={onPress}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
       disabled={disabled || loading}
-      activeOpacity={0.7}
-      style={{
-        opacity,
-        width: fullWidth ? '100%' : undefined,
-        borderRadius: radius,
-        paddingVertical: paddingV,
-        paddingHorizontal: paddingH,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1.5,
-        borderColor: '#CBD5E1',
-        backgroundColor: 'transparent',
-      }}
+      activeOpacity={0.85}
+      style={{ opacity, width: fullWidth ? '100%' : undefined }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        {icon}
-        <Text style={{ color: '#475569', fontWeight: '600', fontSize }}>{title}</Text>
-      </View>
+      <Animated.View
+        style={[
+          {
+            borderRadius: radius,
+            paddingVertical: paddingV,
+            paddingHorizontal: paddingH,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 1.5,
+            borderColor: '#CBD5E1',
+            backgroundColor: 'transparent',
+          },
+          pressStyle,
+        ]}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {icon}
+          <Text style={{ color: '#475569', fontWeight: '600', fontSize }}>{title}</Text>
+        </View>
+      </Animated.View>
     </TouchableOpacity>
   );
 }

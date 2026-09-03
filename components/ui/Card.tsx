@@ -29,14 +29,34 @@ const SHADOWS = {
   },
 };
 
+// "Double-bezel" construction: a tinted outer shell with a hairline border
+// (the machined frame) around a white inner core with a concentric, smaller
+// radius — instead of a single flat rounded rectangle sitting on the page.
+const BEZEL = 4;
+const OUTER_RADIUS = 28;
+const INNER_RADIUS = OUTER_RADIUS - BEZEL;
+
 export default function Card({ children, className = '', noPadding = false, variant = 'default', style, ...props }: CardProps) {
   return (
     <View
-      className={`bg-white rounded-3xl ${noPadding ? '' : 'p-5'} ${className}`}
-      style={[SHADOWS[variant], style as any]}
+      style={[
+        {
+          backgroundColor: '#E9EDF3',
+          borderRadius: OUTER_RADIUS,
+          padding: BEZEL,
+          borderWidth: 1,
+          borderColor: 'rgba(15,23,42,0.07)',
+        },
+        SHADOWS[variant],
+      ]}
       {...props}
     >
-      {children}
+      <View
+        className={`bg-white ${noPadding ? '' : 'p-5'} ${className}`}
+        style={[{ borderRadius: INNER_RADIUS, overflow: 'hidden' }, style as any]}
+      >
+        {children}
+      </View>
     </View>
   );
 }

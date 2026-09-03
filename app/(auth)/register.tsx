@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/context/AuthContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import GrainOverlay from '@/components/ui/GrainOverlay';
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
@@ -53,11 +54,12 @@ export default function RegisterScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <StatusBar barStyle="light-content" />
       <LinearGradient
-        colors={['#1E1B4B', '#312E81', '#4338CA']}
+        colors={['#065F46', '#047857', '#059669']}
         style={{ flex: 1 }}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
+        <GrainOverlay />
         {/* Header */}
         <View style={{ alignItems: 'center', paddingTop: 64, paddingBottom: 24 }}>
           <View style={{
@@ -76,6 +78,7 @@ export default function RegisterScreen() {
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
+            flexGrow: 1,
             backgroundColor: 'white',
             borderTopLeftRadius: 32, borderTopRightRadius: 32,
             paddingHorizontal: 24, paddingTop: 28, paddingBottom: 48,
