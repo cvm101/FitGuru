@@ -95,38 +95,38 @@ graph TD
 
 ```mermaid
 flowchart TD
-    Launch([App Launch]) --> AuthGate{Supabase\nsession?}
+    Launch([App Launch]) --> AuthGate{Supabase session?}
 
     AuthGate -->|No session| AuthGroup["Auth Group"]
     AuthGroup --> Login["Login"]
     AuthGroup --> Register["Register"]
-    Register --> Onboarding["Onboarding\nGoals + Body Stats"]
+    Register --> Onboarding["Onboarding — Goals and Body Stats"]
     Login & Onboarding --> TabGroup
 
     AuthGate -->|Has session| TabGroup["Tab Navigation"]
 
-    TabGroup --> T1["🏠 Dashboard"]
-    TabGroup --> T2["🍎 Calories"]
-    TabGroup --> T3["💪 Exercise"]
-    TabGroup --> T4["👤 Profile"]
+    TabGroup --> T1["Dashboard"]
+    TabGroup --> T2["Calories"]
+    TabGroup --> T3["Exercise"]
+    TabGroup --> T4["Profile"]
 
-    T1 --> D1["Calorie ring\nMacro grid\nWeekly chart"]
+    T1 --> D1["Calorie ring · Macro grid · Weekly chart"]
 
-    T2 --> C1["Date picker\nMeal sections\nFood diary"]
-    C1 --> C2["+ Add Food\nSearch modal"]
-    C2 --> C3{"Found in\nlocal DB?"}
-    C3 -->|"Yes · instant"| C4["Show results"]
-    C3 -->|"No · fallback"| C5["Open Food Facts API"]
+    T2 --> C1["Date picker · Meal sections · Food diary"]
+    C1 --> C2["Add Food — Search modal"]
+    C2 --> C3{"Found in local DB?"}
+    C3 -->|"Yes — instant"| C4["Show results"]
+    C3 -->|"No — fallback"| C5["Open Food Facts API"]
     C5 --> C4
 
-    T3 --> E1["Programs tab\nSplit cards"]
-    E1 --> E2["Start Day\nPre-loaded exercises"]
-    E2 --> E3["Live Workout Logger\nSets · Reps · Weight · RPE"]
-    E3 --> E4["Rest timer auto-starts\nScreen stays awake"]
-    E3 --> E5["Finish → saved to Supabase"]
+    T3 --> E1["Programs tab · Split cards"]
+    E1 --> E2["Start Day · Pre-loaded exercises"]
+    E2 --> E3["Live Workout Logger · Sets · Reps · Weight · RPE"]
+    E3 --> E4["Rest timer auto-starts · Screen stays awake"]
+    E3 --> E5["Finish — saved to Supabase"]
 
     T4 --> P1["Body stats · BMI"]
-    T4 --> P2["Body weight chart\nLog weight"]
+    T4 --> P2["Body weight chart · Log weight"]
     T4 --> P3["26-week heatmap"]
     T4 --> P4["Goals · Calories · Macros"]
 ```
@@ -138,31 +138,31 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     actor User
-    participant App as FoodSearchModal
+    participant Modal as FoodSearchModal
     participant Cache as In-Memory Cache
     participant Local as Supabase foods table
-    participant OFF as Open Food Facts API
+    participant Api as Open Food Facts API
 
-    User->>App: Types query (debounce 400ms)
-    App->>Cache: Check session cache
+    User->>Modal: Types query (debounce 400ms)
+    Modal->>Cache: Check session cache
     alt Cache hit (< 5 min old)
-        Cache-->>App: Return instantly ⚡
+        Cache-->>Modal: Return instantly ⚡
     else Cache miss
-        App->>Local: Full-text search (search_vec)
-        Local-->>App: Results (< 100ms)
+        Modal->>Local: Full-text search (search_vec)
+        Local-->>Modal: Results (< 100ms)
         alt 3 or more results found
-            App-->>User: Show results instantly ⚡
+            Modal-->>User: Show results instantly ⚡
         else Fewer than 3 results
-            App->>OFF: Fetch (world.openfoodfacts.org)
-            Note over App,OFF: 5-second hard timeout
-            OFF-->>App: Products list
-            App->>Local: Auto-save new foods (background)
-            App-->>User: Show merged results
+            Modal->>Api: GET world.openfoodfacts.org
+            Note over Modal,Api: 5-second hard timeout
+            Api-->>Modal: Products list
+            Modal->>Local: Auto-save new foods (background)
+            Modal-->>User: Show merged results
         end
-        App->>Cache: Store results (5 min TTL)
+        Modal->>Cache: Store results (5 min TTL)
     end
-    alt Timeout (> 5s)
-        App-->>User: Show Retry button
+    alt Timeout exceeded
+        Modal-->>User: Show Retry button
     end
 ```
 
@@ -172,21 +172,21 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    A([User selects\nSplit + Day]) --> B["WorkoutSession opens\nPre-loaded exercises"]
-    B --> C["expo-keep-awake\nScreen stays on"]
-    B --> D["Workout timer\nstarts"]
-    D --> E["Log set:\nReps · Weight · RPE"]
-    E --> F["Tick ✓ set done"]
-    F --> G["Rest timer\nauto-starts"]
-    G --> H{Rest\ndone?}
+    A([User selects Split and Day]) --> B["WorkoutSession opens with pre-loaded exercises"]
+    B --> C["expo-keep-awake — screen stays on"]
+    B --> D["Workout timer starts"]
+    D --> E["Log set — Reps · Weight · RPE"]
+    E --> F["Tick set done"]
+    F --> G["Rest timer auto-starts"]
+    G --> H{Rest done?}
     H -->|Vibrate alert| E
-    E --> I{More\nexercises?}
+    E --> I{More exercises?}
     I -->|Yes| E
     I -->|No| J["Finish Workout"]
-    J --> K["createWorkoutSession()\naddWorkoutSets()"]
-    K --> L[("Supabase\nworkout_sessions\nworkout_sets")]
-    L --> M["TanStack Query\ninvalidates"]
-    M --> N["Dashboard\nHistory\nMuscle map\n— all update"]
+    J --> K["createWorkoutSession and addWorkoutSets"]
+    K --> L[("Supabase — workout_sessions and workout_sets")]
+    L --> M["TanStack Query invalidates"]
+    M --> N["Dashboard · History · Muscle map — all update"]
 ```
 
 ---
