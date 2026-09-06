@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -35,11 +35,14 @@ function StartDayButton({ color, onPress }: { color: string; onPress: () => void
 interface SplitCardProps {
   split: WorkoutSplit;
   onStartWorkout?: (split: WorkoutSplit, dayIndex: number) => void;
+  isActive?: boolean;
+  onFollow?: (split: WorkoutSplit) => void;
 }
 
-export default function SplitCard({ split, onStartWorkout }: SplitCardProps) {
+export default function SplitCard({ split, onStartWorkout, isActive = false, onFollow }: SplitCardProps) {
   const [expanded, setExpanded] = useState(false);
   const chevronPress = usePressScale();
+  const followPress = usePressScale(0.95);
 
   const levelConfig = {
     Beginner: { color: '#059669', bg: '#ECFDF5', dot: '#10B981' },
@@ -59,9 +62,7 @@ export default function SplitCard({ split, onStartWorkout }: SplitCardProps) {
       shadowRadius: 12,
       elevation: 5,
     }}>
-      {/* Gradient header — one shared neutral tone across every split; split.color
-          is reserved for the small accent badges below (day bubbles, Start button)
-          so it reads as a quiet identifier, not a competing full-card hue. */}
+      {/* Gradient header */}
       <LinearGradient
         colors={['#1E293B', '#334155']}
         start={{ x: 0, y: 0 }}
@@ -70,10 +71,19 @@ export default function SplitCard({ split, onStartWorkout }: SplitCardProps) {
       >
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>
-            {/* Short name badge */}
-            <View style={{ backgroundColor: 'rgba(255,255,255,0.25)', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8, marginBottom: 8 }}>
-              <Text style={{ color: 'white', fontSize: 11, fontWeight: '800', letterSpacing: 1 }}>{split.shortName}</Text>
+            {/* Short name badge + Active badge row */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <View style={{ backgroundColor: 'rgba(255,255,255,0.25)', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8 }}>
+                <Text style={{ color: 'white', fontSize: 11, fontWeight: '800', letterSpacing: 1 }}>{split.shortName}</Text>
+              </View>
+              {isActive && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#10B981', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 8 }}>
+                  <Ionicons name="checkmark-circle" size={11} color="white" />
+                  <Text style={{ color: 'white', fontSize: 11, fontWeight: '800' }}>Active</Text>
+                </View>
+              )}
             </View>
+
             <Text style={{ color: 'white', fontSize: 20, fontWeight: '800', letterSpacing: -0.3 }}>{split.name}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 }}>
@@ -100,6 +110,39 @@ export default function SplitCard({ split, onStartWorkout }: SplitCardProps) {
           <Ionicons name="trophy-outline" size={13} color="rgba(255,255,255,0.8)" />
           <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>{split.bestFor}</Text>
         </View>
+
+        {/* Follow / Active button */}
+        {onFollow && (
+          <AnimatedTouchable
+            onPress={() => !isActive && onFollow(split)}
+            onPressIn={followPress.onPressIn}
+            onPressOut={followPress.onPressOut}
+            style={[
+              {
+                marginTop: 14,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                paddingVertical: 10,
+                borderRadius: 13,
+                backgroundColor: isActive ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.15)',
+                borderWidth: 1,
+                borderColor: isActive ? '#10B981' : 'rgba(255,255,255,0.25)',
+              },
+              followPress.style,
+            ]}
+          >
+            <Ionicons
+              name={isActive ? 'checkmark-circle' : 'flag-outline'}
+              size={14}
+              color={isActive ? '#10B981' : 'white'}
+            />
+            <Text style={{ fontSize: 13, fontWeight: '700', color: isActive ? '#10B981' : 'white' }}>
+              {isActive ? 'Currently Following' : 'Follow This Program'}
+            </Text>
+          </AnimatedTouchable>
+        )}
       </LinearGradient>
 
       {/* Description + days */}

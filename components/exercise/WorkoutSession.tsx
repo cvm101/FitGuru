@@ -46,6 +46,8 @@ interface WorkoutSessionProps {
   visible: boolean;
   splitName: string;
   suggestedExercises?: string[];
+  /** Pre-filled exercises (used for Continue — carries over previous weights/reps) */
+  initialExercises?: ActiveExercise[];
   onFinish: (exercises: ActiveExercise[], durationMinutes: number) => Promise<void>;
   onClose: () => void;
 }
@@ -63,7 +65,7 @@ function formatTime(secs: number) {
     : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export default function WorkoutSession({ visible, splitName, suggestedExercises = [], onFinish, onClose }: WorkoutSessionProps) {
+export default function WorkoutSession({ visible, splitName, suggestedExercises = [], initialExercises, onFinish, onClose }: WorkoutSessionProps) {
   const [exercises, setExercises] = useState<ActiveExercise[]>([]);
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -91,8 +93,11 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
       startTimeRef.current = Date.now();
       setElapsed(0);
 
-      // Pre-populate with all suggested exercises from the split day
-      if (suggestedExercises.length > 0) {
+      // Continue mode: use pre-filled exercises from a previous session
+      if (initialExercises && initialExercises.length > 0) {
+        setExercises(initialExercises);
+      } else if (suggestedExercises.length > 0) {
+        // Pre-populate with all suggested exercises from the split day
         const preloaded: ActiveExercise[] = suggestedExercises.map((name) => {
           const found = ALL_EXERCISES.find(
             (e) => e.name.toLowerCase() === name.toLowerCase()
@@ -214,17 +219,8 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
   }
 
   function handleClose() {
-    // Only ask for confirmation if the user has actually started logging data
-    const hasData = exercises.some((ex) => ex.sets.some((s) => s.weight || s.reps || s.done));
-    if (hasData) {
-      Alert.alert('Discard Workout?', 'You have logged sets — are you sure you want to exit?', [
-        { text: 'Keep Going', style: 'cancel' },
-        { text: 'Discard', style: 'destructive', onPress: () => { setExercises([]); onClose(); } },
-      ]);
-    } else {
-      setExercises([]);
-      onClose();
-    }
+    setExercises([]);
+    onClose();
   }
 
   const doneCount = exercises.reduce((s, e) => s + e.sets.filter((x) => x.done).length, 0);
