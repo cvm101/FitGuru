@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { WorkoutSplit, WorkoutSession } from '@/lib/types';
+import { useTheme } from '@/lib/context/ThemeContext';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -45,6 +46,7 @@ interface Props {
 }
 
 export default function MyPlanView({ split, sessions, weekRestartAt, onStartDay, onContinueDay, onChangeProgram, onRestartWeek }: Props) {
+  const { colors } = useTheme();
   const weekStart = getWeekStart();
 
   // Sessions count as "this week" only if they're after the week reset AND after any manual restart
@@ -77,7 +79,7 @@ export default function MyPlanView({ split, sessions, weekRestartAt, onStartDay,
 
   return (
     <ScrollView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
@@ -193,19 +195,19 @@ export default function MyPlanView({ split, sessions, weekRestartAt, onStartDay,
 
       {/* ── Day checklist ─────────────────────────────────────── */}
       <Animated.View entering={FadeInDown.delay(120).springify().damping(16)}>
-        <Text style={{ color: '#475569', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
-          Weekly Checklist · {doneCount}/{totalDays} complete
-        </Text>
-        <View style={{
-          backgroundColor: 'white',
-          borderRadius: 20,
-          overflow: 'hidden',
-          shadowColor: '#0F172A',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.07,
-          shadowRadius: 8,
-          elevation: 3,
-        }}>
+    <Text style={{ color: colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
+                      Weekly Checklist · {doneCount}/{totalDays} complete
+                    </Text>
+                    <View style={{
+                      backgroundColor: colors.card,
+                      borderRadius: 20,
+                      overflow: 'hidden',
+                      shadowColor: '#0F172A',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.07,
+                      shadowRadius: 8,
+                      elevation: 3,
+                    }}>
           {dayStatuses.map(({ day, idx, done, previousSession }, i) => (
             <DayRow
               key={idx}
@@ -266,11 +268,12 @@ interface NextUpCardProps {
 
 function NextUpCard({ split, dayStatus, onStart }: NextUpCardProps) {
   const press = usePressScale();
+  const { colors } = useTheme();
   const { day } = dayStatus;
 
   return (
     <View style={{
-      backgroundColor: 'white',
+      backgroundColor: colors.card,
       borderRadius: 18,
       padding: 16,
       marginBottom: 14,
@@ -291,7 +294,7 @@ function NextUpCard({ split, dayStatus, onStart }: NextUpCardProps) {
             <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: split.color + '18', alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ color: split.color, fontSize: 13, fontWeight: '800' }}>{dayStatus.idx + 1}</Text>
             </View>
-            <Text style={{ color: '#0F172A', fontSize: 16, fontWeight: '800' }}>{day.name}</Text>
+                      <Text style={{ color: colors.text, fontSize: 16, fontWeight: '800' }}>{day.name}</Text>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
             {day.muscles.map((m) => (
@@ -300,9 +303,9 @@ function NextUpCard({ split, dayStatus, onStart }: NextUpCardProps) {
               </View>
             ))}
           </View>
-          <Text style={{ color: '#94A3B8', fontSize: 12 }}>
-            {day.exercises.length} exercises
-          </Text>
+                      <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+                        {day.exercises.length} exercises
+                      </Text>
         </View>
 
         <AnimatedTouchable
@@ -336,6 +339,7 @@ interface DayRowProps {
 }
 
 function DayRow({ split, dayName, muscles, exercises, dayNum, done, previousSession, isLast, onStart, onRepeat, onContinue }: DayRowProps) {
+  const { colors } = useTheme();
   const [expanded, setExpanded] = useState(false);
   const startPress = usePressScale(0.96);
   const continuePress = usePressScale(0.96);
@@ -348,7 +352,7 @@ function DayRow({ split, dayName, muscles, exercises, dayNum, done, previousSess
   const totalExercises = exercises.length;
 
   return (
-    <View style={{ borderBottomWidth: isLast ? 0 : 1, borderBottomColor: '#F8FAFC' }}>
+    <View style={{ borderBottomWidth: isLast ? 0 : 1, borderBottomColor: colors.separator }}>
       <TouchableOpacity
         onPress={() => setExpanded((v) => !v)}
         activeOpacity={0.7}
@@ -357,28 +361,28 @@ function DayRow({ split, dayName, muscles, exercises, dayNum, done, previousSess
         {/* Checkmark circle */}
         <View style={{
           width: 28, height: 28, borderRadius: 14,
-          backgroundColor: done ? '#ECFDF5' : '#F8FAFC',
+          backgroundColor: done ? '#ECFDF5' : colors.surface,
           borderWidth: 2,
-          borderColor: done ? '#10B981' : '#E2E8F0',
+          borderColor: done ? '#10B981' : colors.border,
           alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
           {done
             ? <Ionicons name="checkmark" size={14} color="#10B981" />
-            : <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700' }}>{dayNum}</Text>
+            : <Text style={{ color: colors.textMuted, fontSize: 11, fontWeight: '700' }}>{dayNum}</Text>
           }
         </View>
 
         <View style={{ flex: 1 }}>
           <Text style={{
-            color: done ? '#94A3B8' : '#0F172A',
+            color: done ? colors.textMuted : colors.text,
             fontWeight: '700',
             fontSize: 14,
             textDecorationLine: done ? 'line-through' : 'none',
           }}>
             {dayName}
           </Text>
-          <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>
+          <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 2 }}>
             {muscles.join(' · ')}
           </Text>
         </View>
@@ -395,7 +399,7 @@ function DayRow({ split, dayName, muscles, exercises, dayNum, done, previousSess
           </View>
         ) : (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ color: '#CBD5E1', fontSize: 11 }}>{totalExercises} exercises</Text>
+            <Text style={{ color: colors.borderStrong, fontSize: 11 }}>{totalExercises} exercises</Text>
             <AnimatedTouchable
               onPress={onStart}
               onPressIn={startPress.onPressIn}
@@ -408,7 +412,7 @@ function DayRow({ split, dayName, muscles, exercises, dayNum, done, previousSess
           </View>
         )}
 
-        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color="#CBD5E1" style={{ marginLeft: 2 }} />
+        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={colors.borderStrong} style={{ marginLeft: 2 }} />
       </TouchableOpacity>
 
       {/* Continue / Repeat buttons — only when day is done */}
@@ -437,32 +441,32 @@ function DayRow({ split, dayName, muscles, exercises, dayNum, done, previousSess
             onPress={onRepeat}
             onPressIn={repeatPress.onPressIn}
             onPressOut={repeatPress.onPressOut}
-            style={[{
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 5,
-              backgroundColor: '#F1F5F9',
-              paddingVertical: 8,
-              borderRadius: 11,
-              borderWidth: 1,
-              borderColor: '#E2E8F0',
-            }, repeatPress.style]}
+          style={[{
+                          flex: 1,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 5,
+                          backgroundColor: colors.surface,
+                          paddingVertical: 8,
+                          borderRadius: 11,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                        }, repeatPress.style]}
           >
-            <Ionicons name="refresh-outline" size={14} color="#475569" />
-            <Text style={{ color: '#475569', fontSize: 12, fontWeight: '700' }}>Repeat</Text>
+                        <Ionicons name="refresh-outline" size={14} color={colors.textSub} />
+                        <Text style={{ color: colors.textSub, fontSize: 12, fontWeight: '700' }}>Repeat</Text>
           </AnimatedTouchable>
         </View>
       )}
 
       {/* Expanded exercise list */}
       {expanded && (
-        <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
-          <Text style={{ color: '#94A3B8', fontSize: 12, lineHeight: 18 }}>
-            {exercises.join(' · ')}
-          </Text>
-        </View>
+      <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+        <Text style={{ color: colors.textMuted, fontSize: 12, lineHeight: 18 }}>
+          {exercises.join(' · ')}
+        </Text>
+      </View>
       )}
     </View>
   );

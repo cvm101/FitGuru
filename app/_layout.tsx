@@ -4,6 +4,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider, useAuth } from '@/lib/context/AuthContext';
+import { ThemeProvider } from '@/lib/context/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -46,10 +47,12 @@ function AuthGate() {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AuthGate />
-      </AuthProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AuthGate />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

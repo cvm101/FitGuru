@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useTheme } from '@/lib/context/ThemeContext';
 import { getDailyMacros, getWeeklyCalories } from '@/lib/queries/calories';
 import { getTodayWorkout } from '@/lib/queries/exercise';
 import MacroDonut from '@/components/calories/MacroDonut';
@@ -47,6 +48,7 @@ function getGreeting() {
 
 export default function DashboardScreen() {
   const { profile, session } = useAuth();
+  const { colors, isDark } = useTheme();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const userId = session?.user.id ?? '';
@@ -94,13 +96,13 @@ export default function DashboardScreen() {
   });
 
   const macroItems = [
-    { label: 'Protein', current: protein, goal: goalProtein, unit: 'g', color: '#3B82F6', bg: '#EFF6FF' },
-    { label: 'Carbs', current: carbs, goal: goalCarbs, unit: 'g', color: '#F59E0B', bg: '#FFFBEB' },
-    { label: 'Fat', current: fat, goal: goalFat, unit: 'g', color: '#EF4444', bg: '#FEF2F2' },
+    { label: 'Protein', current: protein, goal: goalProtein, unit: 'g', color: '#3B82F6', bg: isDark ? '#1E3A5F' : '#EFF6FF' },
+    { label: 'Carbs', current: carbs, goal: goalCarbs, unit: 'g', color: '#F59E0B', bg: isDark ? '#3D2E0A' : '#FFFBEB' },
+    { label: 'Fat', current: fat, goal: goalFat, unit: 'g', color: '#EF4444', bg: isDark ? '#3D1515' : '#FEF2F2' },
   ];
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar barStyle="light-content" />
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
@@ -111,7 +113,7 @@ export default function DashboardScreen() {
       >
         {/* Dark header */}
         <Animated.View style={headerStretchStyle}>
-          <ScreenHeader colors={['#0F172A', '#1E293B']} paddingBottom={88}>
+          <ScreenHeader colors={colors.headerGradient} paddingBottom={88}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View>
                 <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: '500' }}>
@@ -171,10 +173,10 @@ export default function DashboardScreen() {
             </View>
 
             {/* Remaining / over — a caption, not a second progress bar (the ring above already shows %) */}
-            <Text style={{ textAlign: 'center', fontSize: 12, marginTop: 14 }}>
+              <Text style={{ textAlign: 'center', fontSize: 12, marginTop: 14 }}>
               {consumed > goalCalories
                 ? <Text style={{ color: '#EF4444', fontWeight: '700' }}><AnimatedNumber value={Math.round(consumed - goalCalories)} prefix="+" /> kcal over goal</Text>
-                : <Text style={{ color: '#64748B' }}><Text style={{ color: '#059669', fontWeight: '700' }}><AnimatedNumber value={Math.round(remaining)} /></Text> kcal left today</Text>
+                : <Text style={{ color: colors.textMuted }}><Text style={{ color: '#059669', fontWeight: '700' }}><AnimatedNumber value={Math.round(remaining)} /></Text> kcal left today</Text>
               }
             </Text>
 
@@ -186,7 +188,7 @@ export default function DashboardScreen() {
                     <AnimatedNumber value={Math.round(m.current)} style={{ fontSize: 20, fontWeight: '800', color: m.color }} />
                     <Text style={{ fontSize: 11, color: m.color, fontWeight: '600', opacity: 0.8 }}>{m.unit}</Text>
                   </View>
-                  <Text style={{ fontSize: 10, color: '#94A3B8', marginTop: 2, textAlign: 'center' }}>{m.label}{'\n'}of {m.goal}{m.unit}</Text>
+                  <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 2, textAlign: 'center' }}>{m.label}{'\n'}of {m.goal}{m.unit}</Text>
                   <AnimatedProgressBar
                     percent={(m.current / m.goal) * 100}
                     color={m.color}
@@ -244,7 +246,7 @@ export default function DashboardScreen() {
             <Card>
               <Eyebrow label="Training" color="#059669" bg="#ECFDF5" />
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>Today's Workout</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>Today's Workout</Text>
                 <View style={{ backgroundColor: '#ECFDF5', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
                   <Text style={{ color: '#059669', fontSize: 11, fontWeight: '700' }}>✓ Done</Text>
                 </View>
@@ -254,8 +256,8 @@ export default function DashboardScreen() {
                   <Ionicons name="barbell" size={22} color="#059669" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#1E293B', fontWeight: '700', fontSize: 14 }} numberOfLines={1}>{todayWorkout.split_name}</Text>
-                  <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 2 }}>
+                  <Text style={{ color: colors.text, fontWeight: '700', fontSize: 14 }} numberOfLines={1}>{todayWorkout.split_name}</Text>
+                  <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 2 }}>
                     {todayWorkout.workout_sets?.length ?? 0} sets · {todayWorkout.duration_minutes ?? 0} min
                   </Text>
                 </View>
@@ -263,14 +265,14 @@ export default function DashboardScreen() {
             </Card>
           ) : (
             <TouchableOpacity onPress={() => router.push('/(tabs)/exercise')} activeOpacity={0.8}>
-              <Card style={{ borderWidth: 1.5, borderColor: '#E2E8F0', borderStyle: 'dashed' }}>
+              <Card style={{ borderWidth: 1.5, borderColor: colors.border, borderStyle: 'dashed' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={{ width: 44, height: 44, backgroundColor: '#F8FAFC', borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="barbell-outline" size={22} color="#94A3B8" />
+                  <View style={{ width: 44, height: 44, backgroundColor: colors.surface, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="barbell-outline" size={22} color={colors.textMuted} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#475569', fontWeight: '600', fontSize: 14 }}>No workout today yet</Text>
-                    <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 1 }}>Tap to start a session →</Text>
+                    <Text style={{ color: colors.textSub, fontWeight: '600', fontSize: 14 }}>No workout today yet</Text>
+                    <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 1 }}>Tap to start a session →</Text>
                   </View>
                 </View>
               </Card>
@@ -284,15 +286,15 @@ export default function DashboardScreen() {
             <Card>
               <Eyebrow label="Nutrition" />
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>Weekly Calories</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F8FAFC', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
-                  <Ionicons name="bar-chart-outline" size={13} color="#64748B" />
-                  <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '600' }}>7 days</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>Weekly Calories</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.surface, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
+                  <Ionicons name="bar-chart-outline" size={13} color={colors.textMuted} />
+                  <Text style={{ color: colors.textMuted, fontSize: 11, fontWeight: '600' }}>7 days</Text>
                 </View>
               </View>
               <WeeklyCalorieChart data={weeklyData} goalCalories={goalCalories} today={today} />
               {/* Goal line label */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F1F5F9' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.separator }}>
                 {[
                   { color: '#059669', label: 'Today' },
                   { color: '#94A3B8', label: 'Other days' },
@@ -300,7 +302,7 @@ export default function DashboardScreen() {
                 ].map((l) => (
                   <View key={l.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: l.color }} />
-                    <Text style={{ color: '#94A3B8', fontSize: 11 }}>{l.label}</Text>
+                    <Text style={{ color: colors.textMuted, fontSize: 11 }}>{l.label}</Text>
                   </View>
                 ))}
               </View>

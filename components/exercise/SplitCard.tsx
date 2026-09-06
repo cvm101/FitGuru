@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { WorkoutSplit } from '@/lib/types';
+import { useTheme } from '@/lib/context/ThemeContext';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -40,6 +41,7 @@ interface SplitCardProps {
 }
 
 export default function SplitCard({ split, onStartWorkout, isActive = false, onFollow }: SplitCardProps) {
+  const { colors } = useTheme();
   const [expanded, setExpanded] = useState(false);
   const chevronPress = usePressScale();
   const followPress = usePressScale(0.95);
@@ -146,9 +148,9 @@ export default function SplitCard({ split, onStartWorkout, isActive = false, onF
       </LinearGradient>
 
       {/* Description + days */}
-      <View style={{ backgroundColor: 'white' }}>
+      <View style={{ backgroundColor: colors.card }}>
         <TouchableOpacity onPress={() => setExpanded(!expanded)} style={{ paddingHorizontal: 18, paddingVertical: 12 }}>
-          <Text style={{ color: '#64748B', fontSize: 13, lineHeight: 19 }} numberOfLines={expanded ? undefined : 2}>
+          <Text style={{ color: colors.textSub, fontSize: 13, lineHeight: 19 }} numberOfLines={expanded ? undefined : 2}>
             {split.description}
           </Text>
           {/* Day count bubbles */}
@@ -167,14 +169,14 @@ export default function SplitCard({ split, onStartWorkout, isActive = false, onF
 
         {/* Expanded days */}
         {expanded && (
-          <View style={{ borderTopWidth: 1, borderTopColor: '#F1F5F9' }}>
+          <View style={{ borderTopWidth: 1, borderTopColor: colors.separator }}>
             {split.days.map((day, idx) => (
               <View
                 key={idx}
                 style={{
                   paddingHorizontal: 18, paddingVertical: 12,
                   borderBottomWidth: idx < split.days.length - 1 ? 1 : 0,
-                  borderBottomColor: '#F8FAFC',
+                  borderBottomColor: colors.separator,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -182,7 +184,7 @@ export default function SplitCard({ split, onStartWorkout, isActive = false, onF
                     <View style={{ width: 28, height: 28, borderRadius: 9, backgroundColor: split.color + '20', alignItems: 'center', justifyContent: 'center' }}>
                       <Text style={{ color: split.color, fontSize: 12, fontWeight: '800' }}>{idx + 1}</Text>
                     </View>
-                    <Text style={{ color: '#1E293B', fontWeight: '700', fontSize: 13 }}>{day.name}</Text>
+                    <Text style={{ color: colors.text, fontWeight: '700', fontSize: 13 }}>{day.name}</Text>
                   </View>
                   {onStartWorkout && (
                     <StartDayButton color={split.color} onPress={() => onStartWorkout(split, idx)} />
@@ -190,12 +192,12 @@ export default function SplitCard({ split, onStartWorkout, isActive = false, onF
                 </View>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
                   {day.muscles.map((m) => (
-                    <View key={m} style={{ backgroundColor: '#F1F5F9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
-                      <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '500' }}>{m}</Text>
+                    <View key={m} style={{ backgroundColor: colors.surface, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                      <Text style={{ color: colors.textSub, fontSize: 11, fontWeight: '500' }}>{m}</Text>
                     </View>
                   ))}
                 </View>
-                <Text style={{ color: '#94A3B8', fontSize: 12, lineHeight: 17 }}>
+                <Text style={{ color: colors.textMuted, fontSize: 12, lineHeight: 17 }}>
                   {day.exercises.slice(0, 5).join(' · ')}{day.exercises.length > 5 ? ` +${day.exercises.length - 5} more` : ''}
                 </Text>
               </View>

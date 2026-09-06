@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { FoodLog, MealType } from '@/lib/types';
+import { useTheme } from '@/lib/context/ThemeContext';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -36,6 +37,7 @@ const ACCENT: [string, string] = ['#059669', '#10B981'];
 const ACCENT_LIGHT_BG = '#ECFDF5';
 
 export default function MealSection({ title, mealType, logs, onAdd, onDelete, onUpdate }: MealSectionProps) {
+  const { colors } = useTheme();
   const icon = MEAL_ICON[mealType];
   const totalCalories = logs.reduce((sum, l) => sum + l.calories, 0);
   const totalProtein = logs.reduce((sum, l) => sum + l.protein_g, 0);
@@ -88,7 +90,7 @@ export default function MealSection({ title, mealType, logs, onAdd, onDelete, on
   return (
     <>
       <View style={{
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
         borderRadius: 20,
         overflow: 'hidden',
         shadowColor: '#0F172A',
@@ -106,8 +108,8 @@ export default function MealSection({ title, mealType, logs, onAdd, onDelete, on
               </LinearGradient>
             </View>
             <View>
-              <Text style={{ color: '#0F172A', fontWeight: '700', fontSize: 14 }}>{title}</Text>
-              <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 1 }}>
+              <Text style={{ color: colors.text, fontWeight: '700', fontSize: 14 }}>{title}</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 1 }}>
                 {totalCalories > 0 ? `${Math.round(totalCalories)} kcal · ${Math.round(totalProtein)}g protein` : 'Nothing logged yet'}
               </Text>
             </View>
@@ -130,13 +132,13 @@ export default function MealSection({ title, mealType, logs, onAdd, onDelete, on
             onPressOut={emptyStatePress.onPressOut}
             style={[{ paddingHorizontal: 14, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }, emptyStatePress.style]}
           >
-            <View style={{ width: 28, height: 28, borderRadius: 9, borderWidth: 1.5, borderColor: '#E2E8F0', borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="add" size={15} color="#CBD5E1" />
+            <View style={{ width: 28, height: 28, borderRadius: 9, borderWidth: 1.5, borderColor: colors.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="add" size={15} color={colors.borderStrong} />
             </View>
-            <Text style={{ color: '#CBD5E1', fontSize: 13 }}>Add {title.toLowerCase()} items</Text>
+            <Text style={{ color: colors.borderStrong, fontSize: 13 }}>Add {title.toLowerCase()} items</Text>
           </AnimatedTouchable>
         ) : (
-          <View style={{ borderTopWidth: 1, borderTopColor: '#F8FAFC' }}>
+          <View style={{ borderTopWidth: 1, borderTopColor: colors.separator }}>
             {logs.map((log, idx) => (
               <View
                 key={log.id}
@@ -146,17 +148,17 @@ export default function MealSection({ title, mealType, logs, onAdd, onDelete, on
                   paddingHorizontal: 14,
                   paddingVertical: 10,
                   borderBottomWidth: idx < logs.length - 1 ? 1 : 0,
-                  borderBottomColor: '#F8FAFC',
+                  borderBottomColor: colors.separator,
                 }}
               >
                 <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: ACCENT[0], marginRight: 10 }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#1E293B', fontSize: 13, fontWeight: '600' }} numberOfLines={1}>{log.food_name}</Text>
-                  <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 1 }}>
+                  <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }} numberOfLines={1}>{log.food_name}</Text>
+                  <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 1 }}>
                     {log.quantity}{log.unit}  ·  P:{Math.round(log.protein_g)}g  C:{Math.round(log.carbs_g)}g  F:{Math.round(log.fat_g)}g
                   </Text>
                 </View>
-                <Text style={{ color: '#1E293B', fontWeight: '700', fontSize: 13, marginRight: 10 }}>{Math.round(log.calories)}</Text>
+                <Text style={{ color: colors.text, fontWeight: '700', fontSize: 13, marginRight: 10 }}>{Math.round(log.calories)}</Text>
 
                 {/* Edit button */}
                 <TouchableOpacity
@@ -179,8 +181,8 @@ export default function MealSection({ title, mealType, logs, onAdd, onDelete, on
 
             {/* Meal total */}
             {logs.length > 1 && (
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#FAFAFA' }}>
-                <Text style={{ color: '#64748B', fontSize: 12 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.surfaceAlt }}>
+                <Text style={{ color: colors.textSub, fontSize: 12 }}>
                   Total: <Text style={{ fontWeight: '700', color: ACCENT[0] }}>{Math.round(totalCalories)} kcal</Text>
                 </Text>
               </View>
@@ -203,24 +205,24 @@ export default function MealSection({ title, mealType, logs, onAdd, onDelete, on
           <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={closeEdit} />
 
           <View style={{
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             padding: 24,
             paddingBottom: 36,
           }}>
             {/* Handle */}
-            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#E2E8F0', alignSelf: 'center', marginBottom: 20 }} />
+            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: 20 }} />
 
-            <Text style={{ color: '#0F172A', fontSize: 16, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>
+            <Text style={{ color: colors.text, fontSize: 16, fontWeight: '800', marginBottom: 4 }} numberOfLines={1}>
               {editingLog?.food_name}
             </Text>
-            <Text style={{ color: '#94A3B8', fontSize: 12, marginBottom: 20 }}>
+            <Text style={{ color: colors.textMuted, fontSize: 12, marginBottom: 20 }}>
               Update the quantity to recalculate macros automatically.
             </Text>
 
             {/* Quantity input */}
-            <Text style={{ color: '#475569', fontSize: 12, fontWeight: '700', marginBottom: 6 }}>Quantity (g)</Text>
+            <Text style={{ color: colors.textSub, fontSize: 12, fontWeight: '700', marginBottom: 6 }}>Quantity (g)</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 }}>
               <TextInput
                 value={editQuantity}
@@ -228,21 +230,22 @@ export default function MealSection({ title, mealType, logs, onAdd, onDelete, on
                 keyboardType="decimal-pad"
                 autoFocus
                 selectTextOnFocus
+                placeholderTextColor={colors.textMuted}
                 style={{
                   flex: 1,
-                  backgroundColor: '#F8FAFC',
+                  backgroundColor: colors.inputBg,
                   borderWidth: 2,
-                  borderColor: '#E2E8F0',
+                  borderColor: colors.inputBorder,
                   borderRadius: 14,
                   paddingHorizontal: 16,
                   paddingVertical: 12,
                   fontSize: 22,
                   fontWeight: '700',
-                  color: '#0F172A',
+                  color: colors.text,
                   textAlign: 'center',
                 }}
               />
-              <Text style={{ color: '#94A3B8', fontSize: 14, fontWeight: '600' }}>g</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 14, fontWeight: '600' }}>g</Text>
             </View>
 
             {/* Live macro preview */}
@@ -257,16 +260,16 @@ export default function MealSection({ title, mealType, logs, onAdd, onDelete, on
               const carb = Math.round(per100Carb * qty / 100 * 10) / 10;
               const fat  = Math.round(per100Fat  * qty / 100 * 10) / 10;
               return (
-                <View style={{ flexDirection: 'row', backgroundColor: '#F8FAFC', borderRadius: 14, padding: 14, marginBottom: 20, gap: 0 }}>
+                <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 20, gap: 0 }}>
                   {[
                     { label: 'Calories', val: `${cal}`, color: '#059669' },
                     { label: 'Protein', val: `${prot}g`, color: '#3B82F6' },
                     { label: 'Carbs', val: `${carb}g`, color: '#F59E0B' },
                     { label: 'Fat', val: `${fat}g`, color: '#EF4444' },
                   ].map((m, i) => (
-                    <View key={m.label} style={{ flex: 1, alignItems: 'center', borderLeftWidth: i > 0 ? 1 : 0, borderLeftColor: '#E2E8F0' }}>
+                    <View key={m.label} style={{ flex: 1, alignItems: 'center', borderLeftWidth: i > 0 ? 1 : 0, borderLeftColor: colors.border }}>
                       <Text style={{ color: m.color, fontWeight: '800', fontSize: 15 }}>{m.val}</Text>
-                      <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>{m.label}</Text>
+                      <Text style={{ color: colors.textMuted, fontSize: 10, marginTop: 2 }}>{m.label}</Text>
                     </View>
                   ))}
                 </View>
@@ -277,9 +280,9 @@ export default function MealSection({ title, mealType, logs, onAdd, onDelete, on
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <TouchableOpacity
                 onPress={closeEdit}
-                style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: '#F1F5F9', alignItems: 'center' }}
+                style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.surface, alignItems: 'center' }}
               >
-                <Text style={{ color: '#64748B', fontWeight: '700', fontSize: 14 }}>Cancel</Text>
+                <Text style={{ color: colors.textSub, fontWeight: '700', fontSize: 14 }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSave}

@@ -1,6 +1,7 @@
 import { TouchableOpacity, Text, ActivityIndicator, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { useTheme } from '@/lib/context/ThemeContext';
 
 interface ButtonProps {
   title: string;
@@ -23,6 +24,7 @@ export default function Button({
   fullWidth = true,
   icon,
 }: ButtonProps) {
+  const { colors } = useTheme();
   const paddingV = size === 'sm' ? 10 : size === 'lg' ? 18 : 15;
   const paddingH = size === 'sm' ? 16 : size === 'lg' ? 32 : 24;
   const fontSize = size === 'sm' ? 13 : size === 'lg' ? 17 : 15;
@@ -100,14 +102,7 @@ export default function Button({
 
   if (variant === 'secondary') {
     return (
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={pressIn}
-        onPressOut={pressOut}
-        disabled={disabled || loading}
-        activeOpacity={0.9}
-        style={{ opacity, width: fullWidth ? '100%' : undefined }}
-      >
+      <TouchableOpacity onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} disabled={disabled || loading} activeOpacity={0.9} style={{ opacity, width: fullWidth ? '100%' : undefined }}>
         <Animated.View
           style={[
             {
@@ -132,16 +127,9 @@ export default function Button({
     );
   }
 
-  // ghost
+  // ghost — adapts to dark mode
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      onPressIn={pressIn}
-      onPressOut={pressOut}
-      disabled={disabled || loading}
-      activeOpacity={0.85}
-      style={{ opacity, width: fullWidth ? '100%' : undefined }}
-    >
+    <TouchableOpacity onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} disabled={disabled || loading} activeOpacity={0.85} style={{ opacity, width: fullWidth ? '100%' : undefined }}>
       <Animated.View
         style={[
           {
@@ -151,7 +139,7 @@ export default function Button({
             alignItems: 'center',
             justifyContent: 'center',
             borderWidth: 1.5,
-            borderColor: '#CBD5E1',
+            borderColor: colors.borderStrong,
             backgroundColor: 'transparent',
           },
           pressStyle,
@@ -159,7 +147,7 @@ export default function Button({
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           {icon}
-          <Text style={{ color: '#475569', fontWeight: '600', fontSize }}>{title}</Text>
+          <Text style={{ color: colors.textSub, fontWeight: '600', fontSize }}>{title}</Text>
         </View>
       </Animated.View>
     </TouchableOpacity>

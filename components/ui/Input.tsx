@@ -1,4 +1,5 @@
 import { View, TextInput, Text, TextInputProps } from 'react-native';
+import { useTheme } from '@/lib/context/ThemeContext';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -6,19 +7,20 @@ interface InputProps extends TextInputProps {
   leftIcon?: React.ReactNode;
 }
 
-export default function Input({ label, error, leftIcon, className = '', ...props }: InputProps) {
+export default function Input({ label, error, leftIcon, ...props }: InputProps) {
+  const { colors } = useTheme();
   return (
     <View style={{ gap: 6 }}>
       {label && (
-        <Text style={{ color: '#374151', fontWeight: '600', fontSize: 13, marginBottom: 2 }}>{label}</Text>
+        <Text style={{ color: colors.label, fontWeight: '600', fontSize: 13, marginBottom: 2 }}>{label}</Text>
       )}
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: '#F8FAFC',
+          backgroundColor: colors.inputBg,
           borderWidth: 1.5,
-          borderColor: error ? '#EF4444' : '#E2E8F0',
+          borderColor: error ? '#EF4444' : colors.inputBorder,
           borderRadius: 14,
           paddingHorizontal: 14,
           height: 54,
@@ -26,8 +28,8 @@ export default function Input({ label, error, leftIcon, className = '', ...props
       >
         {leftIcon && <View style={{ marginRight: 10 }}>{leftIcon}</View>}
         <TextInput
-          style={{ flex: 1, color: '#0F172A', fontSize: 15, height: '100%' }}
-          placeholderTextColor="#94A3B8"
+          style={{ flex: 1, color: colors.text, fontSize: 15, height: '100%' }}
+          placeholderTextColor={colors.textMuted}
           {...props}
         />
       </View>

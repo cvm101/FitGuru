@@ -18,6 +18,22 @@ export async function getWorkoutSessions(userId: string): Promise<WorkoutSession
   return data ?? [];
 }
 
+/** Lightweight query for the activity heatmap — no sets join, full 26-week history */
+export async function getWorkoutSessionDates(userId: string): Promise<string[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - 26 * 7);
+  const sinceStr = since.toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select('date')
+    .eq('user_id', userId)
+    .gte('date', sinceStr)
+    .order('date', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((r) => r.date as string);
+}
+
 export async function getTodayWorkout(userId: string, date: string): Promise<WorkoutSession | null> {
   const { data } = await supabase
     .from('workout_sessions')

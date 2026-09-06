@@ -15,7 +15,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/lib/context/AuthContext';
-import { getWorkoutSessions } from '@/lib/queries/exercise';
+import { useTheme } from '@/lib/context/ThemeContext';
+import { getWorkoutSessions, getWorkoutSessionDates } from '@/lib/queries/exercise';
 import { getWeeklyCalories } from '@/lib/queries/calories';
 import { getBodyWeightLogs, upsertBodyWeight } from '@/lib/queries/bodyweight';
 import Card from '@/components/ui/Card';
@@ -79,6 +80,7 @@ function todayDate() {
 
 export default function ProfileScreen() {
   const { session, profile, signOut, saveProfile } = useAuth();
+  const { colors, isDark, toggleTheme } = useTheme();
   const userId = session?.user.id ?? '';
   const qc = useQueryClient();
 
@@ -99,6 +101,12 @@ export default function ProfileScreen() {
   const { data: sessions = [] } = useQuery({
     queryKey: ['workout-sessions', userId],
     queryFn: () => getWorkoutSessions(userId),
+    enabled: !!userId,
+  });
+
+  const { data: heatmapDates = [] } = useQuery({
+    queryKey: ['workout-session-dates', userId],
+    queryFn: () => getWorkoutSessionDates(userId),
     enabled: !!userId,
   });
 
@@ -178,11 +186,11 @@ export default function ProfileScreen() {
   const initial = (profile?.name ?? session?.user?.email ?? 'U')[0].toUpperCase();
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#F1F5F9' }} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
-      <ScreenHeader colors={['#0F172A', '#1E293B']} paddingBottom={32} style={{ alignItems: 'center' }}>
+      <ScreenHeader colors={colors.headerGradient} paddingBottom={32} style={{ alignItems: 'center' }}>
         {/* Avatar */}
         <View style={{ marginBottom: 14 }}>
           <LinearGradient colors={['#059669', '#10B981']} style={{ width: 80, height: 80, borderRadius: 30, alignItems: 'center', justifyContent: 'center' }}>
@@ -229,14 +237,14 @@ export default function ProfileScreen() {
 
         {/* Activity heatmap */}
         <Card>
-          <ActivityHeatmap activeDates={sessions.map((s) => s.date)} weeks={26} />
+          <ActivityHeatmap activeDates={heatmapDates} weeks={26} />
         </Card>
 
         {/* Body Stats */}
         <Card>
           <Eyebrow label="Profile" color="#059669" bg="#ECFDF5" />
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>Body Stats</Text>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>Body Stats</Text>
             {!editing && (
               <EditPill label="Edit" icon="pencil" color="#059669" bg="#ECFDF5" onPress={startEditing} />
             )}
@@ -251,12 +259,12 @@ export default function ProfileScreen() {
                   { label: 'Weight', val: profile?.weight_kg ? `${profile.weight_kg} kg` : '—', icon: 'barbell', color: '#10B981' },
                   { label: 'BMI', val: BMI ?? '—', icon: 'analytics', color: bmiInfo?.color ?? '#94A3B8' },
                 ].map((stat) => (
-                  <View key={stat.label} style={{ width: '47%', backgroundColor: '#F8FAFC', borderRadius: 16, padding: 14 }}>
+                  <View key={stat.label} style={{ width: '47%', backgroundColor: colors.surface, borderRadius: 16, padding: 14 }}>
                     <View style={{ width: 32, height: 32, borderRadius: 11, backgroundColor: stat.color + '18', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
                       <Ionicons name={stat.icon as any} size={16} color={stat.color} />
                     </View>
-                    <Text style={{ color: '#0F172A', fontWeight: '800', fontSize: 17 }}>{stat.val}</Text>
-                    <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>{stat.label}</Text>
+                    <Text style={{ color: colors.text, fontWeight: '800', fontSize: 17 }}>{stat.val}</Text>
+                    <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 2 }}>{stat.label}</Text>
                   </View>
                 ))}
               </View>
@@ -283,7 +291,7 @@ export default function ProfileScreen() {
         <Card>
           <Eyebrow label="Targets" color="#D97706" bg="#FFFBEB" />
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>Daily Goals</Text>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>Daily Goals</Text>
             {!editing && (
               <EditPill label="Adjust" icon="pencil" color="#059669" bg="#ECFDF5" onPress={startEditing} />
             )}
@@ -301,8 +309,8 @@ export default function ProfileScreen() {
                   <View style={{ width: 4, height: 40, borderRadius: 2, backgroundColor: g.color }} />
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <Text style={{ color: '#475569', fontSize: 13 }}>{g.label}</Text>
-                      <Text style={{ color: '#0F172A', fontWeight: '700', fontSize: 13 }}>{g.val} <Text style={{ color: '#94A3B8', fontWeight: '400' }}>{g.unit}</Text></Text>
+                      <Text style={{ color: colors.textSub, fontSize: 13 }}>{g.label}</Text>
+                      <Text style={{ color: colors.text, fontWeight: '700', fontSize: 13 }}>{g.val} <Text style={{ color: colors.textMuted, fontWeight: '400' }}>{g.unit}</Text></Text>
                     </View>
                     <AnimatedProgressBar percent={g.pct * 100} color={g.color} height={5} delay={i * 70} style={{ opacity: 0.7 }} />
                   </View>
@@ -329,22 +337,55 @@ export default function ProfileScreen() {
           </View>
         )}
 
+        {/* Appearance */}
+        <Card>
+          <Eyebrow label="Appearance" color="#6366F1" bg={isDark ? '#1E1B4B' : '#EEF2FF'} />
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 14 }}>Display</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: isDark ? '#312E81' : '#EEF2FF', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name={isDark ? 'moon' : 'sunny'} size={18} color={isDark ? '#818CF8' : '#F59E0B'} />
+              </View>
+              <View>
+                <Text style={{ color: colors.text, fontWeight: '600', fontSize: 14 }}>Dark Mode</Text>
+                <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 1 }}>{isDark ? 'Dark theme active' : 'Light theme active'}</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={toggleTheme}
+              style={{
+                width: 50, height: 28, borderRadius: 14,
+                backgroundColor: isDark ? '#6366F1' : colors.border,
+                justifyContent: 'center',
+                paddingHorizontal: 3,
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={{
+                width: 22, height: 22, borderRadius: 11, backgroundColor: 'white',
+                alignSelf: isDark ? 'flex-end' : 'flex-start',
+                shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 2, elevation: 2,
+              }} />
+            </TouchableOpacity>
+          </View>
+        </Card>
+
         {/* About */}
         <Card>
-          <Eyebrow label="Credits" color="#64748B" bg="#F1F5F9" />
-          <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A', marginBottom: 12 }}>Data Sources</Text>
+          <Eyebrow label="Credits" color="#64748B" bg={isDark ? '#1E293B' : '#F1F5F9'} />
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 12 }}>Data Sources</Text>
           {[
             { icon: 'nutrition', color: '#10B981', title: 'Open Food Facts', desc: '3M+ products · Free & open source' },
             { icon: 'barbell', color: '#059669', title: 'free-exercise-db', desc: '55 exercises · MIT license' },
             { icon: 'server', color: '#3B82F6', title: 'Supabase', desc: 'PostgreSQL · Row Level Security' },
           ].map((info, i) => (
-            <View key={info.title} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: '#F8FAFC' }}>
+            <View key={info.title} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: colors.separator }}>
               <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: info.color + '18', alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name={info.icon as any} size={18} color={info.color} />
               </View>
               <View>
-                <Text style={{ color: '#1E293B', fontWeight: '600', fontSize: 13 }}>{info.title}</Text>
-                <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 1 }}>{info.desc}</Text>
+                <Text style={{ color: colors.text, fontWeight: '600', fontSize: 13 }}>{info.title}</Text>
+                <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 1 }}>{info.desc}</Text>
               </View>
             </View>
           ))}
@@ -371,21 +412,22 @@ export default function ProfileScreen() {
       {/* Log weight modal */}
       <Modal visible={weightModalVisible} transparent animationType="fade" onRequestClose={() => setWeightModalVisible(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', paddingHorizontal: 24 }}>
-          <View style={{ backgroundColor: 'white', borderRadius: 24, padding: 24 }}>
-            <Text style={{ color: '#0F172A', fontWeight: '800', fontSize: 20, marginBottom: 6 }}>Log Weight</Text>
-            <Text style={{ color: '#94A3B8', fontSize: 13, marginBottom: 20 }}>
+          <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: 24 }}>
+            <Text style={{ color: colors.text, fontWeight: '800', fontSize: 20, marginBottom: 6 }}>Log Weight</Text>
+            <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 20 }}>
               {new Date().toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}
             </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8FAFC', borderRadius: 14, borderWidth: 1.5, borderColor: '#E2E8F0', paddingHorizontal: 16, height: 56, marginBottom: 20 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.inputBg, borderRadius: 14, borderWidth: 1.5, borderColor: colors.inputBorder, paddingHorizontal: 16, height: 56, marginBottom: 20 }}>
               <TextInput
                 value={newWeight}
                 onChangeText={setNewWeight}
                 placeholder="e.g. 75.5"
+                placeholderTextColor={colors.textMuted}
                 keyboardType="decimal-pad"
                 autoFocus
-                style={{ flex: 1, fontSize: 24, fontWeight: '700', color: '#0F172A' }}
+                style={{ flex: 1, fontSize: 24, fontWeight: '700', color: colors.text }}
               />
-              <Text style={{ color: '#94A3B8', fontSize: 16, fontWeight: '600' }}>kg</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 16, fontWeight: '600' }}>kg</Text>
             </View>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <View style={{ flex: 1 }}>

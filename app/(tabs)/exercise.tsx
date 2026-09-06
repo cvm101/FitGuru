@@ -3,6 +3,7 @@ import ProgressChart from '@/components/exercise/ProgressChart';
 import SplitCard from '@/components/exercise/SplitCard';
 import WorkoutSession from '@/components/exercise/WorkoutSession';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useTheme } from '@/lib/context/ThemeContext';
 import { WORKOUT_SPLITS } from '@/lib/data/splits';
 import {
   addWorkoutSets,
@@ -66,6 +67,7 @@ function LogWorkoutButton({ onPress }: { onPress: () => void }) {
 
 function TabBarButton({ tab, active, onPress }: { tab: { id: Tab; label: string; icon: string }; active: boolean; onPress: () => void }) {
   const press = usePressScale(0.92);
+  const { colors } = useTheme();
   return (
     <AnimatedTouchable
       onPress={onPress}
@@ -81,8 +83,8 @@ function TabBarButton({ tab, active, onPress }: { tab: { id: Tab; label: string;
         press.style,
       ]}
     >
-      <Ionicons name={tab.icon as any} size={15} color={active ? '#059669' : '#94A3B8'} />
-      <Text style={{ fontSize: 13, fontWeight: '700', color: active ? '#059669' : '#94A3B8' }}>{tab.label}</Text>
+      <Ionicons name={tab.icon as any} size={15} color={active ? '#059669' : colors.textMuted} />
+      <Text style={{ fontSize: 13, fontWeight: '700', color: active ? '#059669' : colors.textMuted }}>{tab.label}</Text>
     </AnimatedTouchable>
   );
 }
@@ -103,6 +105,7 @@ function LogFirstWorkoutButton({ onPress }: { onPress: () => void }) {
 
 function ExerciseChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   const press = usePressScale();
+  const { colors } = useTheme();
   return (
     <AnimatedTouchable
       onPress={onPress}
@@ -111,14 +114,14 @@ function ExerciseChip({ label, active, onPress }: { label: string; active: boole
       style={[
         {
           paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12,
-          backgroundColor: active ? '#059669' : 'white',
-          borderWidth: 1.5, borderColor: active ? '#059669' : '#E2E8F0',
+          backgroundColor: active ? '#059669' : colors.card,
+          borderWidth: 1.5, borderColor: active ? '#059669' : colors.border,
           shadowColor: '#0F172A', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
         },
         press.style,
       ]}
     >
-      <Text style={{ fontSize: 12, fontWeight: '600', color: active ? 'white' : '#475569' }}>{label}</Text>
+      <Text style={{ fontSize: 12, fontWeight: '600', color: active ? 'white' : colors.textSub }}>{label}</Text>
     </AnimatedTouchable>
   );
 }
@@ -136,6 +139,7 @@ function formatSessionDate(dateStr: string) {
 
 export default function ExerciseScreen() {
   const { session } = useAuth();
+  const { colors } = useTheme();
   const qc = useQueryClient();
   const userId = session?.user.id ?? '';
 
@@ -311,10 +315,10 @@ export default function ExerciseScreen() {
   ];
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar barStyle="light-content" />
       {/* Dark header */}
-      <ScreenHeader colors={['#0F172A', '#1E293B']} paddingBottom={20}>
+      <ScreenHeader colors={colors.headerGradient} paddingBottom={20}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <View>
             <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>Train hard,</Text>
@@ -342,7 +346,7 @@ export default function ExerciseScreen() {
       </ScreenHeader>
 
       {/* Tab bar */}
-      <View style={{ flexDirection: 'row', backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
+      <View style={{ flexDirection: 'row', backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.separator }}>
         {TABS.map((tab) => (
           <TabBarButton key={tab.id} tab={tab} active={activeTab === tab.id} onPress={() => setActiveTab(tab.id)} />
         ))}
@@ -365,8 +369,8 @@ export default function ExerciseScreen() {
             <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' }}>
               <Ionicons name="flag-outline" size={32} color="#059669" />
             </View>
-            <Text style={{ color: '#1E293B', fontWeight: '800', fontSize: 18, textAlign: 'center' }}>No active program</Text>
-            <Text style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
+            <Text style={{ color: colors.text, fontWeight: '800', fontSize: 18, textAlign: 'center' }}>No active program</Text>
+            <Text style={{ color: colors.textMuted, fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
               Go to Programs and tap "Follow This Program" to commit to a training split and track your weekly progress here.
             </Text>
             <TouchableOpacity
@@ -382,7 +386,7 @@ export default function ExerciseScreen() {
       {/* Splits */}
       {activeTab === 'splits' && (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-          <Text style={{ color: '#64748B', fontSize: 13, marginBottom: 16, lineHeight: 19 }}>
+          <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 16, lineHeight: 19 }}>
             Choose a program below to follow a structured training plan, or tap "Log Workout" to start a custom session.
           </Text>
           {WORKOUT_SPLITS.map((split, i) => (
@@ -421,11 +425,11 @@ export default function ExerciseScreen() {
               const exerciseSet = new Set(s.workout_sets?.map((ws) => ws.exercise_name));
               const totalVolume = (s.workout_sets ?? []).reduce((sum, ws) => sum + (ws.weight_kg ?? 0) * (ws.reps ?? 0), 0);
               return (
-                <Animated.View key={s.id} entering={FadeInDown.delay(Math.min(sessionIdx, 6) * 60).springify().damping(16)} style={{ backgroundColor: 'white', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
+                <Animated.View key={s.id} entering={FadeInDown.delay(Math.min(sessionIdx, 6) * 60).springify().damping(16)} style={{ backgroundColor: colors.card, borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                     <View style={{ flex: 1, marginRight: 8 }}>
-                      <Text style={{ color: '#0F172A', fontWeight: '800', fontSize: 14 }} numberOfLines={1}>{s.split_name}</Text>
-                      <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>{formatSessionDate(s.date)}</Text>
+                      <Text style={{ color: colors.text, fontWeight: '800', fontSize: 14 }} numberOfLines={1}>{s.split_name}</Text>
+                      <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 2 }}>{formatSessionDate(s.date)}</Text>
                     </View>
                     <TouchableOpacity onPress={() => Alert.alert('Delete', 'Remove this workout?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => deleteMutation.mutate(s.id) }])}>
                       <Ionicons name="trash-outline" size={16} color="#EF4444" />
@@ -440,15 +444,15 @@ export default function ExerciseScreen() {
                     ].map((stat) => (
                       <View key={stat.label} style={{ flex: 1, backgroundColor: stat.color + '12', borderRadius: 12, padding: 8, alignItems: 'center' }}>
                         <AnimatedNumber value={stat.val} suffix={stat.suffix} style={{ color: stat.color, fontWeight: '800', fontSize: 14 }} />
-                        <Text style={{ color: '#94A3B8', fontSize: 9, marginTop: 2 }}>{stat.label}</Text>
+                        <Text style={{ color: colors.textMuted, fontSize: 9, marginTop: 2 }}>{stat.label}</Text>
                       </View>
                     ))}
                   </View>
                   {exerciseSet.size > 0 && (
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
                       {Array.from(exerciseSet).map((ex) => (
-                        <View key={ex} style={{ backgroundColor: '#F1F5F9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
-                          <Text style={{ color: '#64748B', fontSize: 11 }}>{ex}</Text>
+                        <View key={ex} style={{ backgroundColor: colors.surface, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                          <Text style={{ color: colors.textSub, fontSize: 11 }}>{ex}</Text>
                         </View>
                       ))}
                     </View>
@@ -465,22 +469,22 @@ export default function ExerciseScreen() {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 32 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />}>
           
           {/* 1RM Calculator */}
-          <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 16, marginBottom: 14, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
+          <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 16, marginBottom: 14, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
             <Eyebrow label="Tools" color="#059669" bg="#ECFDF5" />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <View style={{ width: 32, height: 32, backgroundColor: '#ECFDF5', borderRadius: 11, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="calculator" size={16} color="#059669" />
               </View>
               <View>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>1RM Calculator</Text>
-                <Text style={{ fontSize: 11, color: '#94A3B8' }}>One-Rep Max estimator</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>1RM Calculator</Text>
+                <Text style={{ fontSize: 11, color: colors.textMuted }}>One-Rep Max estimator</Text>
               </View>
             </View>
 
             {/* Explanation */}
-            <View style={{ backgroundColor: '#F8FAFC', borderRadius: 12, padding: 12, marginBottom: 12, borderLeftWidth: 3, borderLeftColor: '#059669' }}>
-              <Text style={{ color: '#1E293B', fontSize: 13, fontWeight: '700', marginBottom: 4 }}>What is 1RM?</Text>
-              <Text style={{ color: '#64748B', fontSize: 12, lineHeight: 18 }}>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 12, marginBottom: 12, borderLeftWidth: 3, borderLeftColor: '#059669' }}>
+              <Text style={{ color: colors.text, fontSize: 13, fontWeight: '700', marginBottom: 4 }}>What is 1RM?</Text>
+              <Text style={{ color: colors.textSub, fontSize: 12, lineHeight: 18 }}>
                 <Text style={{ fontWeight: '600' }}>1RM (One-Rep Max)</Text> is the maximum weight you can lift for a single repetition on an exercise — it's the gold standard for measuring strength.{'\n\n'}
                 You don't need to actually attempt a dangerous max lift. Just enter a weight you recently lifted and the number of reps you did, and we'll estimate your 1RM using the <Text style={{ fontWeight: '600' }}>Epley formula</Text>. Works best with <Text style={{ color: '#059669', fontWeight: '600' }}>1–12 reps</Text>.{'\n\n'}
                 The percentages below (60–100%) show how much weight to use for different training goals — e.g. 80% for hypertrophy (muscle building), 90%+ for strength work.
@@ -488,23 +492,25 @@ export default function ExerciseScreen() {
             </View>
             <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '600', marginBottom: 4 }}>Weight (kg)</Text>
+                <Text style={{ color: colors.textSub, fontSize: 11, fontWeight: '600', marginBottom: 4 }}>Weight (kg)</Text>
                 <TextInput
                   value={calc1RMWeight}
                   onChangeText={setCalc1RMWeight}
                   placeholder="e.g. 80"
+                  placeholderTextColor={colors.textMuted}
                   keyboardType="decimal-pad"
-                  style={{ backgroundColor: '#F8FAFC', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, fontWeight: '600', color: '#0F172A' }}
+                  style={{ backgroundColor: colors.inputBg, borderWidth: 1.5, borderColor: colors.inputBorder, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, fontWeight: '600', color: colors.text }}
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '600', marginBottom: 4 }}>Reps</Text>
+                <Text style={{ color: colors.textSub, fontSize: 11, fontWeight: '600', marginBottom: 4 }}>Reps</Text>
                 <TextInput
                   value={calc1RMReps}
                   onChangeText={setCalc1RMReps}
                   placeholder="e.g. 5"
+                  placeholderTextColor={colors.textMuted}
                   keyboardType="number-pad"
-                  style={{ backgroundColor: '#F8FAFC', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, fontWeight: '600', color: '#0F172A' }}
+                  style={{ backgroundColor: colors.inputBg, borderWidth: 1.5, borderColor: colors.inputBorder, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, fontWeight: '600', color: colors.text }}
                 />
               </View>
             </View>
@@ -529,10 +535,10 @@ export default function ExerciseScreen() {
                       <Text style={{ color: '#34D399', fontSize: 11, textAlign: 'center', marginTop: 2, marginBottom: 10 }}>Based on {w}kg × {r} reps (Epley formula)</Text>
                       <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
                         {pcts.map(({ p, label }) => (
-                          <View key={p} style={{ flex: 1, minWidth: 56, backgroundColor: 'white', borderRadius: 10, padding: 8, alignItems: 'center' }}>
+                          <View key={p} style={{ flex: 1, minWidth: 56, backgroundColor: colors.card, borderRadius: 10, padding: 8, alignItems: 'center' }}>
                             <AnimatedNumber value={Math.round(orm * p / 100)} duration={400} style={{ color: '#059669', fontWeight: '800', fontSize: 14 }} />
-                            <Text style={{ color: '#94A3B8', fontSize: 9, marginTop: 1 }}>{p}%</Text>
-                            <Text style={{ color: '#CBD5E1', fontSize: 8, marginTop: 1 }}>{label}</Text>
+                            <Text style={{ color: colors.textMuted, fontSize: 9, marginTop: 1 }}>{p}%</Text>
+                            <Text style={{ color: colors.borderStrong, fontSize: 8, marginTop: 1 }}>{label}</Text>
                           </View>
                         ))}
                       </View>
@@ -564,11 +570,11 @@ export default function ExerciseScreen() {
               )}
 
               {/* PRs */}
-              <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 16, marginTop: 14, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
+              <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 16, marginTop: 14, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
                 <Eyebrow label="Achievements" color="#D97706" bg="#FFFBEB" />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                   <Ionicons name="trophy" size={18} color="#F59E0B" />
-                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>Personal Records</Text>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>Personal Records</Text>
                 </View>
                 {trackedExercises.slice(0, 8).map((ex) => {
                   const allSets = sessions.flatMap((s) => s.workout_sets ?? []).filter((ws) => ws.exercise_name === ex && ws.weight_kg && ws.reps);
@@ -578,8 +584,8 @@ export default function ExerciseScreen() {
                     ? Math.round(maxWeight * (1 + bestSet.reps / 30))
                     : null;
                   return maxWeight > 0 ? (
-                    <View key={ex} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
-                      <Text style={{ color: '#475569', fontSize: 13, flex: 1 }} numberOfLines={1}>{ex}</Text>
+                    <View key={ex} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.separator }}>
+                      <Text style={{ color: colors.textSub, fontSize: 13, flex: 1 }} numberOfLines={1}>{ex}</Text>
                       <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                         <View style={{ backgroundColor: '#FFFBEB', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
                           <Text style={{ color: '#D97706', fontWeight: '800', fontSize: 12 }}>🏆 {maxWeight}kg × {bestSet?.reps}</Text>

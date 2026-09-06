@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useTheme } from '@/lib/context/ThemeContext';
 import {
   getFoodLogs,
   deleteFoodLog,
@@ -47,6 +48,7 @@ const MEAL_LABELS: Record<MealType, string> = {
 
 export default function CaloriesScreen() {
   const { session, profile } = useAuth();
+  const { colors } = useTheme();
   const qc = useQueryClient();
   const userId = session?.user.id ?? '';
 
@@ -143,7 +145,7 @@ export default function CaloriesScreen() {
   const over = consumed > goalCalories;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar barStyle="light-content" />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -211,15 +213,15 @@ export default function CaloriesScreen() {
         </ScreenHeader>
 
         {/* Macro summary row */}
-        <View style={{ flexDirection: 'row', gap: 0, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
+        <View style={{ flexDirection: 'row', gap: 0, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.separator }}>
           {[
             { label: 'Protein', cur: protein, goal: goalProtein, unit: 'g', color: '#3B82F6' },
             { label: 'Carbs', cur: carbs, goal: goalCarbs, unit: 'g', color: '#F59E0B' },
             { label: 'Fat', cur: fat, goal: goalFat, unit: 'g', color: '#EF4444' },
           ].map((m, i) => (
-            <Animated.View key={m.label} entering={FadeInDown.delay(i * 80).springify().damping(16)} style={{ flex: 1, paddingVertical: 14, alignItems: 'center', borderLeftWidth: i > 0 ? 1 : 0, borderLeftColor: '#F1F5F9' }}>
+            <Animated.View key={m.label} entering={FadeInDown.delay(i * 80).springify().damping(16)} style={{ flex: 1, paddingVertical: 14, alignItems: 'center', borderLeftWidth: i > 0 ? 1 : 0, borderLeftColor: colors.separator }}>
               <AnimatedNumber value={Math.round(m.cur)} style={{ color: m.color, fontWeight: '800', fontSize: 16 }} />
-              <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 1 }}>{m.unit} {m.label}</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 10, marginTop: 1 }}>{m.unit} {m.label}</Text>
               <AnimatedProgressBar
                 percent={(m.cur / m.goal) * 100}
                 color={m.color}
@@ -259,6 +261,7 @@ export default function CaloriesScreen() {
             Eating enough protein ({goalProtein}g/day) helps preserve muscle while losing fat.
           </Text>
         </View>
+        <View style={{ height: 1 }} />
       </ScrollView>
 
       <FoodSearchModal
