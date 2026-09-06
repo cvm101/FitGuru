@@ -27,6 +27,21 @@ export async function deleteFoodLog(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function updateFoodLog(
+  id: string,
+  quantity: number,
+  calories: number,
+  protein_g: number,
+  carbs_g: number,
+  fat_g: number,
+): Promise<void> {
+  const { error } = await supabase
+    .from('food_logs')
+    .update({ quantity, calories, protein_g, carbs_g, fat_g })
+    .eq('id', id);
+  if (error) throw error;
+}
+
 export async function getDailyMacros(userId: string, date: string): Promise<MacroSummary> {
   const { data, error } = await supabase
     .from('food_logs')

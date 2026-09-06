@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/context/AuthContext';
 import {
   getFoodLogs,
   deleteFoodLog,
+  updateFoodLog,
   getDailyMacros,
   addFoodLog,
 } from '@/lib/queries/calories';
@@ -89,6 +90,17 @@ export default function CaloriesScreen() {
 
   const deleteMutation = useMutation({
     mutationFn: deleteFoodLog,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['food-logs', userId, dk] });
+      qc.invalidateQueries({ queryKey: ['daily-macros', userId, dk] });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, quantity, calories, protein_g, carbs_g, fat_g }: {
+      id: string; quantity: number; calories: number;
+      protein_g: number; carbs_g: number; fat_g: number;
+    }) => updateFoodLog(id, quantity, calories, protein_g, carbs_g, fat_g),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['food-logs', userId, dk] });
       qc.invalidateQueries({ queryKey: ['daily-macros', userId, dk] });
@@ -229,6 +241,9 @@ export default function CaloriesScreen() {
                 logs={logs.filter((l) => l.meal_type === mt)}
                 onAdd={() => openAddFood(mt)}
                 onDelete={(id) => deleteMutation.mutate(id)}
+                onUpdate={(id, quantity, calories, protein_g, carbs_g, fat_g) =>
+                  updateMutation.mutate({ id, quantity, calories, protein_g, carbs_g, fat_g })
+                }
               />
             </Animated.View>
           ))}

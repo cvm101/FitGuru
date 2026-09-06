@@ -1,3 +1,4 @@
+import MyPlanView from '@/components/exercise/MyPlanView';
 import ProgressChart from '@/components/exercise/ProgressChart';
 import SplitCard from '@/components/exercise/SplitCard';
 import WorkoutSession from '@/components/exercise/WorkoutSession';
@@ -10,10 +11,13 @@ import {
   getExerciseProgress,
   getWorkoutSessions,
 } from '@/lib/queries/exercise';
-import type { ActiveExercise, WorkoutSplit } from '@/lib/types';
+import { clearActiveProgram, getActiveProgram, saveActiveProgram, restartProgramWeek } from '@/lib/activeProgram';
+import type { ActiveExercise, WorkoutSplit, WorkoutSession as WorkoutSessionType } from '@/lib/types';
+import exercisesData from '@/lib/data/exercises.json';
+import type { Exercise } from '@/lib/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   RefreshControl,
@@ -119,7 +123,7 @@ function ExerciseChip({ label, active, onPress }: { label: string; active: boole
   );
 }
 
-type Tab = 'splits' | 'history' | 'progress';
+type Tab = 'splits' | 'history' | 'progress' | 'plan';
 
 function todayDate() {
   return new Date().toISOString().split('T')[0];
@@ -141,6 +145,20 @@ export default function ExerciseScreen() {
   const [activeDayIdx, setActiveDayIdx] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState('');
+  const [activeProgramId, setActiveProgramId] = useState<string | null>(null);
+  const [weekRestartAt, setWeekRestartAt] = useState<string | null>(null);
+  const [exerciseOverride, setExerciseOverride] = useState<string[] | null>(null);
+  const [initialExercisesOverride, setInitialExercisesOverride] = useState<ActiveExercise[] | null>(null);
+
+  // Load persisted active program on mount
+  useEffect(() => {
+    getActiveProgram().then((p) => {
+      if (p) {
+        setActiveProgramId(p.splitId);
+        setWeekRestartAt(p.weekRestartAt ?? null);
+      }
+    });
+  }, []);
 
   const { data: sessions = [], refetch } = useQuery({
     queryKey: ['workout-sessions', userId],
@@ -184,14 +202,91 @@ export default function ExerciseScreen() {
     await createSessionMutation.mutateAsync({ exercises, splitName, durationMinutes });
     setWorkoutVisible(false);
     setActiveSplit(null);
-    setActiveTab('history');
+    setExerciseOverride(null);
+    setInitialExercisesOverride(null);
+    // Go back to My Plan tab if there's an active program, else History
+    setActiveTab(activeProgramId ? 'plan' : 'history');
     Alert.alert('Workout Saved! 💪', `Great session! ${exercises.length} exercises logged.`);
   }
 
-  function startWorkout(split?: WorkoutSplit, dayIdx?: number) {
+  function startWorkout(split?: WorkoutSplit, dayIdx?: number, exerciseList?: string[]) {
     setActiveSplit(split ?? null);
     setActiveDayIdx(dayIdx ?? 0);
+    setExerciseOverride(exerciseList ?? null);
+    setInitialExercisesOverride(null);
     setWorkoutVisible(true);
+  }
+
+  function continueWorkout(split: WorkoutSplit, dayIdx: number, previousSession: WorkoutSessionType) {
+    const ALL_EXERCISES = exercisesData as Exercise[];
+
+    // Build pre-filled exercises from the previous session's logged sets
+    const grouped = new Map<string, typeof previousSession.workout_sets>();
+    (previousSession.workout_sets ?? []).forEach((ws) => {
+      if (!grouped.has(ws.exercise_name)) grouped.set(ws.exercise_name, []);
+      grouped.get(ws.exercise_name)!.push(ws);
+    });
+    const prefilled: ActiveExercise[] = Array.from(grouped.entries()).map(([name, sets]) => {
+      const found = ALL_EXERCISES.find((e) => e.name.toLowerCase() === name.toLowerCase());
+      return {
+        id: Math.random().toString(36).slice(2),
+        name: found?.name ?? name,
+        muscleGroup: found?.muscleGroup ?? (sets![0]?.muscle_group ?? 'General'),
+        gifUrl: found?.gifUrl,
+        thumbnailUrl: found?.thumbnailUrl,
+        sets: (sets ?? [])
+          .sort((a, b) => a.set_number - b.set_number)
+          .map((ws) => ({
+            id: Math.random().toString(36).slice(2),
+            weight: ws.weight_kg?.toString() ?? '',
+            reps: ws.reps?.toString() ?? '',
+            rpe: '',
+            done: false,
+          })),
+      };
+    });
+
+    // Append any exercises from the full split day that weren't logged yet
+    const alreadyLogged = new Set(grouped.keys().map((k) => k.toLowerCase()));
+    const splitDay = split.days[dayIdx];
+    const remaining: ActiveExercise[] = (splitDay?.exercises ?? [])
+      .filter((name) => !alreadyLogged.has(name.toLowerCase()))
+      .map((name) => {
+        const found = ALL_EXERCISES.find((e) => e.name.toLowerCase() === name.toLowerCase());
+        return {
+          id: Math.random().toString(36).slice(2),
+          name: found?.name ?? name,
+          muscleGroup: found?.muscleGroup ?? 'General',
+          gifUrl: found?.gifUrl,
+          thumbnailUrl: found?.thumbnailUrl,
+          sets: [{ id: Math.random().toString(36).slice(2), weight: '', reps: '', rpe: '', done: false }],
+        };
+      });
+
+    setActiveSplit(split);
+    setActiveDayIdx(dayIdx);
+    setExerciseOverride(null);
+    setInitialExercisesOverride([...prefilled, ...remaining]);
+    setWorkoutVisible(true);
+  }
+
+  async function handleFollowProgram(split: WorkoutSplit) {
+    await saveActiveProgram(split.id);
+    setActiveProgramId(split.id);
+    setActiveTab('plan');
+  }
+
+  async function handleClearProgram() {
+    await clearActiveProgram();
+    setActiveProgramId(null);
+    setWeekRestartAt(null);
+    setActiveTab('splits');
+  }
+
+  async function handleRestartWeek() {
+    if (!activeProgramId) return;
+    await restartProgramWeek(activeProgramId);
+    setWeekRestartAt(new Date().toISOString());
   }
 
   const onRefresh = useCallback(async () => {
@@ -206,7 +301,10 @@ export default function ExerciseScreen() {
   const trackedExercises = Array.from(new Set(sessions.flatMap((s) => s.workout_sets?.map((ws) => ws.exercise_name) ?? []))).slice(0, 12);
   const weekSessions = sessions.filter((s) => { const d = new Date(s.date); const now = new Date(); const ws = new Date(now); ws.setDate(ws.getDate() - 7); return d >= ws; }).length;
 
+  const activeSplitObj = WORKOUT_SPLITS.find((s) => s.id === activeProgramId) ?? null;
+
   const TABS: { id: Tab; label: string; icon: string }[] = [
+    { id: 'plan', label: 'My Plan', icon: 'flag' },
     { id: 'splits', label: 'Programs', icon: 'grid' },
     { id: 'history', label: 'History', icon: 'time' },
     { id: 'progress', label: 'Progress', icon: 'trending-up' },
@@ -250,6 +348,37 @@ export default function ExerciseScreen() {
         ))}
       </View>
 
+      {/* My Plan */}
+      {activeTab === 'plan' && (
+        activeSplitObj ? (
+          <MyPlanView
+            split={activeSplitObj}
+            sessions={sessions}
+            weekRestartAt={weekRestartAt ?? undefined}
+            onStartDay={(split, dayIdx, exerciseList) => startWorkout(split, dayIdx, exerciseList)}
+            onContinueDay={(split, dayIdx, prevSession) => continueWorkout(split, dayIdx, prevSession)}
+            onChangeProgram={handleClearProgram}
+            onRestartWeek={handleRestartWeek}
+          />
+        ) : (
+          <ScrollView contentContainerStyle={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 14 }}>
+            <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="flag-outline" size={32} color="#059669" />
+            </View>
+            <Text style={{ color: '#1E293B', fontWeight: '800', fontSize: 18, textAlign: 'center' }}>No active program</Text>
+            <Text style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
+              Go to Programs and tap "Follow This Program" to commit to a training split and track your weekly progress here.
+            </Text>
+            <TouchableOpacity
+              onPress={() => setActiveTab('splits')}
+              style={{ backgroundColor: '#059669', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14, marginTop: 4 }}
+            >
+              <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>Browse Programs</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        )
+      )}
+
       {/* Splits */}
       {activeTab === 'splits' && (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
@@ -258,7 +387,12 @@ export default function ExerciseScreen() {
           </Text>
           {WORKOUT_SPLITS.map((split, i) => (
             <Animated.View key={split.id} entering={FadeInDown.delay(Math.min(i, 6) * 60).springify().damping(16)}>
-              <SplitCard split={split} onStartWorkout={(s, idx) => startWorkout(s, idx)} />
+              <SplitCard
+                split={split}
+                onStartWorkout={(s, idx) => startWorkout(s, idx)}
+                isActive={activeProgramId === split.id}
+                onFollow={handleFollowProgram}
+              />
             </Animated.View>
           ))}
         </ScrollView>
@@ -468,9 +602,10 @@ export default function ExerciseScreen() {
       <WorkoutSession
         visible={workoutVisible}
         splitName={activeSplit ? `${activeSplit.shortName} – ${activeSplit.days[activeDayIdx]?.name ?? 'Day ' + (activeDayIdx + 1)}` : 'Custom Workout'}
-        suggestedExercises={activeSplit?.days[activeDayIdx]?.exercises ?? []}
+        suggestedExercises={exerciseOverride ?? activeSplit?.days[activeDayIdx]?.exercises ?? []}
+        initialExercises={initialExercisesOverride ?? undefined}
         onFinish={handleFinishWorkout}
-        onClose={() => setWorkoutVisible(false)}
+        onClose={() => { setWorkoutVisible(false); setExerciseOverride(null); setInitialExercisesOverride(null); }}
       />
     </View>
   );
