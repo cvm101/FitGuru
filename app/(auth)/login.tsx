@@ -1,20 +1,19 @@
+import Button from '@/components/ui/Button';
+import GrainOverlay from '@/components/ui/GrainOverlay';
+import Input from '@/components/ui/Input';
+import { useAuth } from '@/lib/context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Link } from 'expo-router';
 import { useState } from 'react';
 import {
-  View,
-  Text,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  TouchableOpacity,
   StatusBar,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { Link } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@/lib/context/AuthContext';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import GrainOverlay from '@/components/ui/GrainOverlay';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();

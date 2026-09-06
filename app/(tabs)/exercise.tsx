@@ -1,4 +1,3 @@
-import MuscleMap from '@/components/exercise/MuscleMap';
 import ProgressChart from '@/components/exercise/ProgressChart';
 import SplitCard from '@/components/exercise/SplitCard';
 import WorkoutSession from '@/components/exercise/WorkoutSession';
@@ -204,20 +203,6 @@ export default function ExerciseScreen() {
   const [calc1RMWeight, setCalc1RMWeight] = useState('');
   const [calc1RMReps, setCalc1RMReps] = useState('');
 
-  // Muscle volume map — aggregate sets per muscle group in last 7 days
-  const oneWeekAgo = new Date(); oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const recentSessions = sessions.filter((s) => new Date(s.date + 'T00:00:00') >= oneWeekAgo);
-  const muscleVolumes: Record<string, number> = {};
-  recentSessions.forEach((s) => {
-    (s.workout_sets ?? []).forEach((ws) => {
-      const mg = ws.muscle_group || '';
-      muscleVolumes[mg] = (muscleVolumes[mg] ?? 0) + 1;
-    });
-  });
-  const maxMusVol = Math.max(...Object.values(muscleVolumes), 1);
-  const normalizedVolumes: Record<string, number> = Object.fromEntries(
-    Object.entries(muscleVolumes).map(([k, v]) => [k, v / maxMusVol])
-  );
   const trackedExercises = Array.from(new Set(sessions.flatMap((s) => s.workout_sets?.map((ws) => ws.exercise_name) ?? []))).slice(0, 12);
   const weekSessions = sessions.filter((s) => { const d = new Date(s.date); const now = new Date(); const ws = new Date(now); ws.setDate(ws.getDate() - 7); return d >= ws; }).length;
 
@@ -420,11 +405,6 @@ export default function ExerciseScreen() {
                     </Animated.View>
                   );
             })()}
-          </View>
-
-          {/* Muscle map */}
-          <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 16, marginBottom: 14, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
-            <MuscleMap muscleVolumes={normalizedVolumes} period="this week" />
           </View>
 
           {trackedExercises.length === 0 ? (
