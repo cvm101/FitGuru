@@ -19,6 +19,7 @@ import { useTheme } from '@/lib/context/ThemeContext';
 import { getWorkoutSessions, getWorkoutSessionDates } from '@/lib/queries/exercise';
 import { getWeeklyCalories } from '@/lib/queries/calories';
 import { getBodyWeightLogs, upsertBodyWeight } from '@/lib/queries/bodyweight';
+import { toLocalISODate, todayDate } from '@/lib/date';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -74,9 +75,6 @@ function EditPill({ label, icon, color, bg, onPress }: { label: string; icon: st
   );
 }
 
-function todayDate() {
-  return new Date().toISOString().split('T')[0];
-}
 
 export default function ProfileScreen() {
   const { session, profile, signOut, saveProfile } = useAuth();
@@ -142,7 +140,7 @@ export default function ProfileScreen() {
       streak++;
       const d = new Date(checkDate + 'T00:00:00');
       d.setDate(d.getDate() - 1);
-      checkDate = d.toISOString().split('T')[0];
+      checkDate = toLocalISODate(d);
     } else break;
   }
 

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
+import { todayDate } from './date';
 
 const KEY = 'active_program';
 // Set once the account has been consulted, so a null on the server is treated as
@@ -10,10 +11,6 @@ export interface ActiveProgram {
   splitId: string;
   startDate: string;       // YYYY-MM-DD — when user first followed this program
   weekRestartAt?: string;  // ISO timestamp — when user last hit "Restart Week"
-}
-
-function today(): string {
-  return new Date().toISOString().split('T')[0];
 }
 
 async function readCache(): Promise<ActiveProgram | null> {
@@ -74,7 +71,7 @@ export async function getActiveProgram(userId?: string): Promise<ActiveProgram |
     if (data?.active_split_id) {
       const program: ActiveProgram = {
         splitId: data.active_split_id,
-        startDate: data.active_split_started_on ?? today(),
+        startDate: data.active_split_started_on ?? todayDate(),
         weekRestartAt: data.week_restart_at ?? undefined,
       };
       await writeCache(program);
@@ -100,7 +97,7 @@ export async function getActiveProgram(userId?: string): Promise<ActiveProgram |
 }
 
 export async function saveActiveProgram(userId: string, splitId: string): Promise<void> {
-  const program: ActiveProgram = { splitId, startDate: today() };
+  const program: ActiveProgram = { splitId, startDate: todayDate() };
   await writeCache(program);
   try {
     await pushToAccount(userId, program);
@@ -114,7 +111,7 @@ export async function restartProgramWeek(userId: string, splitId: string): Promi
   const existing = await getActiveProgram(userId);
   const program: ActiveProgram = {
     splitId,
-    startDate: existing?.startDate ?? today(),
+    startDate: existing?.startDate ?? todayDate(),
     weekRestartAt: new Date().toISOString(),
   };
   await writeCache(program);

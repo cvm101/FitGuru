@@ -35,7 +35,7 @@ CaloriTracker is a full-featured personal health companion that combines nutriti
 
 - 🍎 Track daily **calorie & macro intake** across 4 meal types with a searchable food diary — edit quantities anytime with live macro recalculation
 - ⚡ **Instant food search** — searches a local Supabase DB of 256 Indian & global foods first, falls back to Open Food Facts and auto-saves results
-- 🗓️ **My Plan** — commit to a workout program and track weekly progress day-by-day with a checklist, a "Next Up" card, and Continue / Repeat session options
+- 🗓️ **My Plan** — commit to a workout program (saved on your account) and track weekly progress day-by-day with a checklist, a "Next Up" card, and Continue / Repeat session options
 - 💪 Follow structured **workout splits** (PPL, Upper/Lower, Arnold, Full Body, Bro Split, PHUL)
 - 📋 Pre-loaded exercise lists per split day — start logging immediately, no manual searching
 - ⏱️ **Live workout logger** with set/rep/weight/RPE tracking and an auto-start rest timer
@@ -66,12 +66,13 @@ graph TD
         AuthCtx["AuthContext\nSupabase session + user profile"]
         TQ["TanStack Query\nCache · Background refetch · Mutations"]
         Queries["lib/queries/\ncalories.ts · exercise.ts · bodyweight.ts"]
-        AS["AsyncStorage\nactive_program · week restart timestamp"]
+        AS["AsyncStorage\nAuth session + offline plan cache"]
     end
 
     subgraph Backend["☁️ Supabase"]
         SupaAuth["Auth\nJWT · Email/Password · Auto-refresh"]
         DB["PostgreSQL\nRow-Level Security"]
+        Profiles["profiles\nactive_split_id · week_restart_at"]
         FoodsDB["foods table\n256 Indian + global foods"]
     end
 
@@ -85,6 +86,7 @@ graph TD
     TQ --> Queries
     Queries --> AuthCtx
     Queries --> SupaAuth & DB
+    Exercise --> Profiles
     Exercise --> AS
     Calories -->|"search"| FoodsDB
     FoodsDB -->|"miss → fallback"| OFF
@@ -130,7 +132,7 @@ flowchart TD
     E0d -->|"Not done"| E0e["Start — pre-loaded exercises"]
     E0d -->|"Done"| E0f["Continue — previous weights pre-filled\nor Repeat — blank session"]
     T3 --> E1["Programs tab · Split cards"]
-    E1 --> E1a["Follow This Program — persists to AsyncStorage"]
+    E1 --> E1a["Follow This Program — saved on profiles in Supabase"]
     E1 --> E2["Start Day · Pre-loaded exercises"]
     E2 --> E3["Live Workout Logger · Sets · Reps · Weight · RPE"]
     E3 --> E4["Rest timer auto-starts · Screen stays awake"]
@@ -227,6 +229,9 @@ erDiagram
         int goal_protein
         int goal_carbs
         int goal_fat
+        text active_split_id
+        date active_split_started_on
+        timestamptz week_restart_at
         timestamptz created_at
     }
 
@@ -314,15 +319,15 @@ erDiagram
 - **Macro Row** — at-a-glance P/C/F with mini progress bars against daily targets
 
 ### 🗓️ My Plan (Active Program)
-- **Commit to a Program** — tap "Follow This Program" on any split card; your choice persists across app restarts via AsyncStorage
+- **Commit to a Program** — tap "Follow This Program" on any split card; the choice is stored on your `profiles` row in Supabase so it follows you across browsers, devices, and deploy URLs. Device storage is only an offline cache. The program stays until you tap Change / unfollow — it does not expire overnight.
 - **Weekly Checklist** — all days of the split shown as rows; a green checkmark appears automatically when a matching workout session is saved for that day
 - **Progress Bar** — shows `N / 5 days` with per-day dot indicators; turns gold when the full week is complete
 - **Next Up Card** — always surfaces the first unfinished day with a direct Start button and exercise preview
 - **Continue** — reopens a completed day with previous weights and reps pre-filled for every exercise; remaining split exercises appear below with blank sets ready to fill
 - **Repeat** — starts a brand-new session for a done day using the split's default exercise list with empty sets
 - **Per-Day Exercise Count** — each completed row shows `X/Y done ✓` (exercises logged vs split total)
-- **Restart Week** — clears this week's visual progress without deleting workout history; persisted via a restart timestamp in AsyncStorage
-- **Auto-Reset** — checklist resets every Monday at midnight; the program loops back to Day 1 automatically
+- **Restart Week** — clears this week's visual progress without deleting workout history; the restart timestamp is stored on your profile (`week_restart_at`)
+- **Auto-Reset** — weekly **checkmarks** reset every Monday at midnight; the **program itself** stays selected and loops back to Day 1. Only you can remove the active program.
 
 ### 💪 Exercise Tracker
 - **6 Workout Programs** — PPL, Upper/Lower, Full Body, Arnold, Bro Split, PHUL
@@ -377,7 +382,7 @@ erDiagram
 | Food DB | Supabase `foods` table | 256 Indian + global foods, instant search |
 | Food Fallback | Open Food Facts API | 3M+ products, open source, no key needed |
 | Exercise Data | free-exercise-db (MIT) | 55 exercises bundled as JSON |
-| Local Storage | @react-native-async-storage | Supabase session + active program persistence |
+| Local Storage | @react-native-async-storage | Supabase auth session + offline cache of the active program |
 
 ---
 
@@ -430,7 +435,7 @@ CaloriTracker/
 │   │   ├── splits.ts                6 workout split definitions (days + exercises)
 │   │   ├── exercises.json           55 exercises with muscle groups + GIF URLs
 │   │   └── foods-seed.ts            256 Indian + global foods (seed source)
-│   ├── activeProgram.ts             AsyncStorage helpers: save · load · restart week
+│   ├── activeProgram.ts             Active program: Supabase profiles + local cache
 │   ├── supabase.ts                  Supabase client (AsyncStorage session)
 │   └── types.ts                     All TypeScript interfaces and types
 │
@@ -441,7 +446,8 @@ CaloriTracker/
 ├── supabase/
 │   └── migrations/
 │       ├── 001_init.sql             Core schema: profiles, food_logs, sessions, sets
-│       └── 002_bodyweight_rpe.sql   body_weight_logs + rpe/notes columns
+│       ├── 002_bodyweight_rpe.sql   body_weight_logs + rpe/notes columns
+│       └── 003_active_program.sql   profiles.active_split_id + week_restart_at
 │
 ├── .env.example                     Environment variable template
 ├── app.json                         Expo config
@@ -490,7 +496,10 @@ In **Supabase → SQL Editor**, run in order:
 ```
 supabase/migrations/001_init.sql
 supabase/migrations/002_bodyweight_rpe.sql
+supabase/migrations/003_active_program.sql
 ```
+
+If the app already has calories, workouts, and a `profiles` table, you only need **003**. It adds three columns — `active_split_id`, `active_split_started_on`, and `week_restart_at` — so the followed program lives on the account instead of only in the browser.
 
 Then create the foods table and seed it:
 

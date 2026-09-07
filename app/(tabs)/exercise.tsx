@@ -13,6 +13,7 @@ import {
   getWorkoutSessions,
 } from '@/lib/queries/exercise';
 import { clearActiveProgram, getActiveProgram, saveActiveProgram, restartProgramWeek } from '@/lib/activeProgram';
+import { todayDate } from '@/lib/date';
 import type { ActiveExercise, WorkoutSplit, WorkoutSession as WorkoutSessionType } from '@/lib/types';
 import exercisesData from '@/lib/data/exercises.json';
 import type { Exercise } from '@/lib/types';
@@ -128,9 +129,6 @@ function ExerciseChip({ label, active, onPress }: { label: string; active: boole
 
 type Tab = 'splits' | 'history' | 'progress' | 'plan';
 
-function todayDate() {
-  return new Date().toISOString().split('T')[0];
-}
 
 function formatSessionDate(dateStr: string) {
   const d = new Date(dateStr + 'T00:00:00');

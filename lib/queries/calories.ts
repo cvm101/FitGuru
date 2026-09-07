@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { toLocalISODate } from '../date';
 import type { DailyCalories, FoodLog, MacroSummary, NewFoodLog } from '../types';
 
 export async function getFoodLogs(userId: string, date: string): Promise<FoodLog[]> {
@@ -64,7 +65,7 @@ export async function getWeeklyCalories(userId: string): Promise<DailyCalories[]
   const dates = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
-    return d.toISOString().split('T')[0];
+    return toLocalISODate(d);
   });
 
   const { data, error } = await supabase
