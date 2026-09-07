@@ -154,15 +154,17 @@ export default function ExerciseScreen() {
   const [exerciseOverride, setExerciseOverride] = useState<string[] | null>(null);
   const [initialExercisesOverride, setInitialExercisesOverride] = useState<ActiveExercise[] | null>(null);
 
-  // Load persisted active program on mount
+  // Load the active program from the user's account (device cache as fallback)
   useEffect(() => {
-    getActiveProgram().then((p) => {
-      if (p) {
-        setActiveProgramId(p.splitId);
-        setWeekRestartAt(p.weekRestartAt ?? null);
-      }
+    if (!userId) return;
+    let cancelled = false;
+    getActiveProgram(userId).then((p) => {
+      if (cancelled) return;
+      setActiveProgramId(p?.splitId ?? null);
+      setWeekRestartAt(p?.weekRestartAt ?? null);
     });
-  }, []);
+    return () => { cancelled = true; };
+  }, [userId]);
 
   const { data: sessions = [], refetch } = useQuery({
     queryKey: ['workout-sessions', userId],
@@ -275,13 +277,13 @@ export default function ExerciseScreen() {
   }
 
   async function handleFollowProgram(split: WorkoutSplit) {
-    await saveActiveProgram(split.id);
+    await saveActiveProgram(userId, split.id);
     setActiveProgramId(split.id);
     setActiveTab('plan');
   }
 
   async function handleClearProgram() {
-    await clearActiveProgram();
+    await clearActiveProgram(userId);
     setActiveProgramId(null);
     setWeekRestartAt(null);
     setActiveTab('splits');
@@ -289,7 +291,7 @@ export default function ExerciseScreen() {
 
   async function handleRestartWeek() {
     if (!activeProgramId) return;
-    await restartProgramWeek(activeProgramId);
+    await restartProgramWeek(userId, activeProgramId);
     setWeekRestartAt(new Date().toISOString());
   }
 
