@@ -1,5 +1,6 @@
 import { View, Text } from 'react-native';
 import { useTheme } from '@/lib/context/ThemeContext';
+import { toLocalISODate } from '@/lib/date';
 
 interface ActivityHeatmapProps {
   activeDates: string[];
@@ -8,10 +9,6 @@ interface ActivityHeatmapProps {
 
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-function toISODate(d: Date) {
-  return d.toISOString().split('T')[0];
-}
 
 export default function ActivityHeatmap({ activeDates, weeks = 26 }: ActivityHeatmapProps) {
   const { colors, isDark } = useTheme();
@@ -32,7 +29,7 @@ export default function ActivityHeatmap({ activeDates, weeks = 26 }: ActivityHea
     for (let d = 0; d < 7; d++) {
       const cell = new Date(startDate);
       cell.setDate(startDate.getDate() + w * 7 + d);
-      const dateStr = toISODate(cell);
+      const dateStr = toLocalISODate(cell);
       week.push(dateStr);
 
       if (d === 0) {
@@ -47,7 +44,7 @@ export default function ActivityHeatmap({ activeDates, weeks = 26 }: ActivityHea
   }
 
   const totalActive = activeDates.length;
-  const todayStr = toISODate(today);
+  const todayStr = toLocalISODate(today);
   const CELL = 11;
   const GAP = 2;
 

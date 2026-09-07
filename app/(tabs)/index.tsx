@@ -8,6 +8,7 @@ import Animated, { FadeInDown, useAnimatedScrollHandler, useAnimatedStyle, useSh
 import { useAuth } from '@/lib/context/AuthContext';
 import { useTheme } from '@/lib/context/ThemeContext';
 import { getDailyMacros, getWeeklyCalories } from '@/lib/queries/calories';
+import { todayDate } from '@/lib/date';
 import { getTodayWorkout } from '@/lib/queries/exercise';
 import MacroDonut from '@/components/calories/MacroDonut';
 import Card from '@/components/ui/Card';
@@ -35,9 +36,6 @@ function PressableTile({ children, onPress, style }: { children: React.ReactNode
   );
 }
 
-function todayDate() {
-  return new Date().toISOString().split('T')[0];
-}
 
 function getGreeting() {
   const h = new Date().getHours();

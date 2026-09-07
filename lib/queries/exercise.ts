@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { toLocalISODate } from '../date';
 import type {
   WorkoutSession,
   NewWorkoutSession,
@@ -22,7 +23,7 @@ export async function getWorkoutSessions(userId: string): Promise<WorkoutSession
 export async function getWorkoutSessionDates(userId: string): Promise<string[]> {
   const since = new Date();
   since.setDate(since.getDate() - 26 * 7);
-  const sinceStr = since.toISOString().split('T')[0];
+  const sinceStr = toLocalISODate(since);
 
   const { data, error } = await supabase
     .from('workout_sessions')

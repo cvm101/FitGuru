@@ -11,6 +11,9 @@ export interface Profile {
   goal_protein: number;
   goal_carbs: number;
   goal_fat: number;
+  active_split_id: string | null;
+  active_split_started_on: string | null;
+  week_restart_at: string | null;
   created_at: string;
 }
 

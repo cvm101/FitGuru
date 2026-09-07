@@ -26,9 +26,10 @@ import AnimatedProgressBar from '@/components/ui/AnimatedProgressBar';
 import GlassPill from '@/components/ui/GlassPill';
 import ScreenHeader from '@/components/ui/ScreenHeader';
 import type { MealType, OpenFoodFactsProduct } from '@/lib/types';
+import { toLocalISODate } from '@/lib/date';
 
 function dateKey(d: Date) {
-  return d.toISOString().split('T')[0];
+  return toLocalISODate(d);
 }
 
 function formatHeader(d: Date) {
