@@ -14,7 +14,7 @@ import {
 } from '@/lib/queries/exercise';
 import { clearActiveProgram, getActiveProgram, saveActiveProgram, restartProgramWeek } from '@/lib/activeProgram';
 import { todayDate } from '@/lib/date';
-import type { ActiveExercise, WorkoutSplit, WorkoutSession as WorkoutSessionType } from '@/lib/types';
+import type { ActiveExercise, WorkoutSplit, WorkoutSession as WorkoutSessionType, NewWorkoutSet } from '@/lib/types';
 import exercisesData from '@/lib/data/exercises.json';
 import type { Exercise } from '@/lib/types';
 import { Ionicons } from '@expo/vector-icons';

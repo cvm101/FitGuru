@@ -11,6 +11,7 @@ import {
   Vibration,
   Platform,
   Image,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -296,7 +297,8 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <View style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }} keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
+        <View style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
         {/* Header */}
         <LinearGradient colors={['#0F172A', '#1E293B']} style={{ paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -502,6 +504,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
           )}
         </ScrollView>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
