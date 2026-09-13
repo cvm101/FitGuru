@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, memo } from 'react';
+import { useState, useRef, useEffect, memo, useCallback } from 'react';
+import { useWorkoutSave } from '@/lib/workoutSaveContext';
 import {
   View,
   Text,
@@ -66,7 +67,24 @@ function formatTime(secs: number) {
 }
 
 export default function WorkoutSession({ visible, splitName, suggestedExercises = [], initialExercises, onFinish, onClose }: WorkoutSessionProps) {
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const { setHasChanges, registerSaveProgress, registerCloseWorkout } = useWorkoutSave();
   const [exercises, setExercises] = useState<ActiveExercise[]>([]);
+
+  useEffect(() => {
+    if (visible && exercises.length > 0) {
+      setHasUnsavedChanges(true);
+      setHasChanges(true);
+    } else {
+      setHasUnsavedChanges(false);
+      setHasChanges(false);
+    }
+    // Register handleFinish as the save function when the component mounts
+    if (visible) {
+      registerSaveProgress(handleFinish);
+      registerCloseWorkout(() => { setExercises([]); setHasUnsavedChanges(false); setHasChanges(false); onClose(); });
+    }
+  }, [exercises, visible, setHasChanges, registerSaveProgress, handleFinish, handleClose]);
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
   const [saving, setSaving] = useState(false);
   // Which exercise card has its GIF demo panel open
@@ -206,7 +224,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
     );
   }
 
-  async function handleFinish() {
+  const handleFinish = useCallback(async () => {
     if (exercises.length === 0) { Alert.alert('Empty Workout', 'Add at least one exercise.'); return; }
     // Only save exercises that actually have set data — skip empty ones
     const loggedExercises = exercises.filter((ex) => ex.sets.some((s) => s.weight || s.reps));
@@ -216,12 +234,34 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
     }
     setSaving(true);
     try { await onFinish(loggedExercises, Math.ceil(elapsed / 60)); } finally { setSaving(false); }
-  }
+  }, [exercises, onFinish, elapsed, saving]);
 
-  function handleClose() {
-    setExercises([]);
-    onClose();
-  }
+  const handleClose = useCallback(() => {
+    if (hasUnsavedChanges) {
+      Alert.alert(
+        "Unsaved Changes",
+        "You have unsaved changes. Do you want to save them before closing?",
+        [
+          { text: "Discard", style: "destructive", onPress: () => {
+            setExercises([]);
+            setHasUnsavedChanges(false);
+            setHasChanges(false);
+            onClose();
+          }},
+          { text: "Cancel", style: "cancel" },
+          { text: "Save & Close", onPress: async () => {
+            await handleFinish();
+            setHasUnsavedChanges(false);
+            setHasChanges(false);
+            onClose();
+          }},
+        ]
+      );
+    } else {
+      setExercises([]);
+      onClose();
+    }
+  }, [hasUnsavedChanges, setExercises, setHasUnsavedChanges, setHasChanges, onClose]);
 
   const doneCount = exercises.reduce((s, e) => s + e.sets.filter((x) => x.done).length, 0);
   const totalCount = exercises.reduce((s, e) => s + e.sets.length, 0);

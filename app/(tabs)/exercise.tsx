@@ -19,7 +19,8 @@ import exercisesData from '@/lib/data/exercises.json';
 import type { Exercise } from '@/lib/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
+import { useWorkoutSave } from '@/lib/workoutSaveContext';
 import {
   Alert,
   RefreshControl,
@@ -140,6 +141,7 @@ export default function ExerciseScreen() {
   const { colors } = useTheme();
   const qc = useQueryClient();
   const userId = session?.user.id ?? '';
+  const { hasChanges, setHasChanges } = useWorkoutSave();
 
   const [activeTab, setActiveTab] = useState<Tab>('splits');
   const [workoutVisible, setWorkoutVisible] = useState(false);
@@ -251,7 +253,7 @@ export default function ExerciseScreen() {
     });
 
     // Append any exercises from the full split day that weren't logged yet
-    const alreadyLogged = new Set(grouped.keys().map((k) => k.toLowerCase()));
+    const alreadyLogged = new Set(Array.from(grouped.keys()).map((k) => k.toLowerCase()));
     const splitDay = split.days[dayIdx];
     const remaining: ActiveExercise[] = (splitDay?.exercises ?? [])
       .filter((name) => !alreadyLogged.has(name.toLowerCase()))

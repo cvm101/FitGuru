@@ -1,10 +1,12 @@
 import '../global.css';
-import { useEffect } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { useEffect, useState, useCallback } from 'react';
+import { Stack, useRouter, useSegments, useNavigationContainerRef } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider, useAuth } from '@/lib/context/AuthContext';
 import { ThemeProvider } from '@/lib/context/ThemeContext';
+import { WorkoutSaveContext, WorkoutSaveState } from '@/lib/workoutSaveContext';
+import { Alert } from 'react-native';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -45,12 +47,43 @@ function AuthGate() {
   );
 }
 
+function SaveProvider({ children }: { children: React.ReactNode }) {
+  const [hasChanges, setHasChanges] = useState(false);
+  const [saveProgressFn, setSaveProgressFn] = useState<() => Promise<void>>(async () => {});
+  const [closeWorkoutFn, setCloseWorkoutFn] = useState<() => void>(() => {});
+
+  const registerSaveProgress = (fn: () => Promise<void>) => {
+    setSaveProgressFn(() => fn);
+  };
+
+  const registerCloseWorkout = (fn: () => void) => {
+    setCloseWorkoutFn(() => fn);
+  };
+
+  const state = {
+    hasChanges,
+    setHasChanges,
+    saveProgress: saveProgressFn,
+    registerSaveProgress,
+    closeWorkout: closeWorkoutFn,
+    registerCloseWorkout,
+  };
+
+  return (
+    <WorkoutSaveContext.Provider value={state}>
+      {children}
+    </WorkoutSaveContext.Provider>
+  );
+}
+
 export default function RootLayout() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AuthGate />
+          <SaveProvider>
+            <AuthGate />
+          </SaveProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

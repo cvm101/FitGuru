@@ -1,6 +1,9 @@
 import { Tabs } from 'expo-router';
-import { View, Text, Platform } from 'react-native';
+import { View, Text, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useWorkoutSave } from '@/lib/workoutSaveContext';
+import { useEffect, useRef } from 'react';
+import { usePathname } from 'expo-router';
 
 function TabIcon({ name, label, color, focused }: { name: any; label: string; color: any; focused: boolean }) {
   return (
@@ -22,6 +25,42 @@ function TabIcon({ name, label, color, focused }: { name: any; label: string; co
 }
 
 export default function TabsLayout() {
+  const { hasChanges, saveProgress, setHasChanges, closeWorkout } = useWorkoutSave();
+  const pathname = usePathname();
+  const prevPathnameRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (prevPathnameRef.current === '/exercise' && pathname !== '/exercise') {
+      // User switched away from Exercise tab
+      if (hasChanges) {
+        Alert.alert(
+          "Unsaved Workout Changes",
+          "You have unsaved workout changes. Would you like to save them before leaving?",
+          [
+            {
+              text: "Discard",
+              style: "destructive",
+              onPress: () => {
+                closeWorkout();
+                setHasChanges(false);
+              },
+            },
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Save",
+              onPress: async () => {
+                await saveProgress();
+                closeWorkout();
+                setHasChanges(false);
+              },
+            },
+          ]
+        );
+      }
+    }
+    prevPathnameRef.current = pathname;
+  }, [pathname, hasChanges, closeWorkout, saveProgress, setHasChanges]);
+
   return (
     <Tabs
       screenOptions={{
