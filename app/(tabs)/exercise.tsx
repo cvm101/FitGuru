@@ -180,20 +180,26 @@ export default function ExerciseScreen() {
 
   const createSessionMutation = useMutation({
     mutationFn: async ({ exercises, splitName, durationMinutes }: { exercises: ActiveExercise[]; splitName: string; durationMinutes: number }) => {
-      const s = await createWorkoutSession({ user_id: userId, date: todayDate(), split_name: splitName, duration_minutes: durationMinutes, notes: null });
-      const sets = exercises.flatMap((ex) =>
-        ex.sets.filter((s) => s.reps || s.weight).map((s, idx) => ({
-          session_id: s.id ? s.id : '',
-          exercise_name: ex.name,
-          muscle_group: ex.muscleGroup,
-          set_number: idx + 1,
-          reps: s.reps ? parseInt(s.reps, 10) : null,
-          weight_kg: s.weight ? parseFloat(s.weight) : null,
-          duration_sec: null,
-        })).map((ws) => ({ ...ws, session_id: s.id }))
-      );
-      if (sets.length > 0) await addWorkoutSets(sets);
-      return s;
+      const session = await createWorkoutSession({ user_id: userId, date: todayDate(), split_name: splitName, duration_minutes: durationMinutes, notes: null });
+
+      const setRecords: NewWorkoutSet[] = [];
+
+      exercises.forEach((ex) => {
+        ex.sets.filter((s) => s.reps || s.weight).forEach((s, idx) => {
+          setRecords.push({
+            session_id: session.id,
+            exercise_name: ex.name,
+            muscle_group: ex.muscleGroup,
+            set_number: idx + 1,
+            reps: s.reps ? parseInt(s.reps, 10) : null,
+            weight_kg: s.weight ? parseFloat(s.weight) : null,
+            duration_sec: null,
+          });
+        });
+      });
+
+      if (setRecords.length > 0) await addWorkoutSets(setRecords);
+      return session;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['workout-sessions', userId] }); qc.invalidateQueries({ queryKey: ['today-workout', userId] }); },
   });

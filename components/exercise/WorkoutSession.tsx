@@ -239,8 +239,12 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
       return;
     }
     setSaving(true);
-    try { await onFinish(loggedExercises, Math.ceil(elapsed / 60)); } finally { setSaving(false); }
-  }, [exercises, onFinish, elapsed, saving]);
+    try {
+      await onFinish(loggedExercises, Math.ceil(elapsed / 60));
+    } finally {
+      setSaving(false);
+    }
+  }, [exercises, onFinish, elapsed]);
 
   const handleClose = useCallback(() => {
     if (hasUnsavedChanges) {
@@ -267,7 +271,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
       setExercises([]);
       onClose();
     }
-  }, [hasUnsavedChanges, setExercises, setHasUnsavedChanges, setHasChanges, onClose]);
+  }, [hasUnsavedChanges, setExercises, setHasUnsavedChanges, setHasChanges, onClose, handleFinish]);
 
   const doneCount = exercises.reduce((s, e) => s + e.sets.filter((x) => x.done).length, 0);
   const totalCount = exercises.reduce((s, e) => s + e.sets.length, 0);
