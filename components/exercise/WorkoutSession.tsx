@@ -71,6 +71,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
   const { setHasChanges, registerSaveProgress, registerCloseWorkout } = useWorkoutSave();
   const [exercises, setExercises] = useState<ActiveExercise[]>([]);
 
+  // Save-state sync — only depends on visible and exercises, not on context setters
   useEffect(() => {
     if (visible && exercises.length > 0) {
       setHasUnsavedChanges(true);
@@ -79,12 +80,15 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
       setHasUnsavedChanges(false);
       setHasChanges(false);
     }
-    // Register handleFinish as the save function when the component mounts
+  }, [visible, exercises]);
+
+  // Register save/close handlers once when session opens
+  useEffect(() => {
     if (visible) {
       registerSaveProgress(handleFinish);
       registerCloseWorkout(() => { setExercises([]); setHasUnsavedChanges(false); setHasChanges(false); onClose(); });
     }
-  }, [exercises, visible, setHasChanges, registerSaveProgress, handleFinish, handleClose]);
+  }, [visible, handleFinish]);
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
   const [saving, setSaving] = useState(false);
   // Which exercise card has its GIF demo panel open
@@ -113,7 +117,9 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
 
       // Continue mode: use pre-filled exercises from a previous session
       if (initialExercises && initialExercises.length > 0) {
-        setExercises(initialExercises);
+        setExercises(initialExercises
+          .filter((ex) => ex && Array.isArray(ex.sets) && ex.sets.length > 0)
+          .map((ex) => ({ ...ex, sets: ex.sets.filter(Boolean) })));
       } else if (suggestedExercises.length > 0) {
         // Pre-populate with all suggested exercises from the split day
         const preloaded: ActiveExercise[] = suggestedExercises.map((name) => {
@@ -192,7 +198,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
   function addSet(exerciseId: string) {
     setExercises((prev) => prev.map((ex) =>
       ex.id === exerciseId
-        ? { ...ex, sets: [...ex.sets, { id: generateId(), weight: ex.sets[ex.sets.length - 1]?.weight ?? '', reps: '', rpe: '', done: false }] }
+        ? { ...ex, sets: [...(ex.sets ?? []), { id: generateId(), weight: ex.sets?.[ex.sets.length - 1]?.weight ?? '', reps: '', rpe: '', done: false }] }
         : ex
     ));
   }
@@ -200,7 +206,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
   function updateSet(exerciseId: string, setId: string, field: 'weight' | 'reps' | 'rpe', value: string) {
     setExercises((prev) => prev.map((ex) =>
       ex.id === exerciseId
-        ? { ...ex, sets: ex.sets.map((s) => (s.id === setId ? { ...s, [field]: value } : s)) }
+        ? { ...ex, sets: ex.sets.map((s) => (s?.id === setId ? { ...s, [field]: value } : s ?? { id: setId, [field]: value, weight: '', reps: '', rpe: '', done: false })) }
         : ex
     ));
   }
@@ -208,7 +214,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
   function toggleSetDone(exerciseId: string, setId: string) {
     setExercises((prev) => prev.map((ex) =>
       ex.id === exerciseId
-        ? { ...ex, sets: ex.sets.map((s) => (s.id === setId ? { ...s, done: !s.done } : s)) }
+        ? { ...ex, sets: ex.sets.map((s) => (s?.id === setId ? { ...s, done: !s?.done } : s ?? { id: setId, done: true, weight: '', reps: '', rpe: '' })) }
         : ex
     ));
     // Auto-start rest timer when set is marked done
@@ -219,7 +225,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
   function removeSet(exerciseId: string, setId: string) {
     setExercises((prev) =>
       prev.map((ex) =>
-        ex.id === exerciseId ? { ...ex, sets: ex.sets.filter((s) => s.id !== setId) } : ex
+        ex.id === exerciseId ? { ...ex, sets: ex.sets.filter((s) => s?.id !== setId) } : ex
       ).filter((ex) => ex.sets.length > 0)
     );
   }
@@ -356,7 +362,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
             </View>
           )}
 
-          {exercises.map((ex) => (
+          {exercises.filter(Boolean).map((ex) => (
             <View key={ex.id} style={{ backgroundColor: 'white', borderRadius: 20, marginBottom: 12, overflow: 'hidden', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
               {/* Exercise header */}
               <TouchableOpacity
