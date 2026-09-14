@@ -375,7 +375,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
           contentContainerStyle={{ padding: 14, paddingBottom: 100 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets
+          automaticallyAdjustKeyboardInsets={false}
         >
           {exercises.length === 0 && (
             <View style={{ alignItems: 'center', paddingVertical: 48, gap: 10 }}>
