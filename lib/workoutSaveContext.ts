@@ -1,11 +1,11 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext } from 'react';
 
 export type WorkoutSaveState = {
   hasChanges: boolean;
   setHasChanges: (v: boolean) => void;
-  saveProgress: () => Promise<void>;
+  saveProgress: () => Promise<boolean>;
   /** Called by WorkoutSession to register its save function */
-  registerSaveProgress: (fn: () => Promise<void>) => void;
+  registerSaveProgress: (fn: () => Promise<boolean>) => void;
   /** Called to close the workout modal from outside WorkoutSession */
   closeWorkout: () => void;
   /** Register a function to close the workout modal */
@@ -15,7 +15,7 @@ export type WorkoutSaveState = {
 export const WorkoutSaveContext = createContext<WorkoutSaveState>({
   hasChanges: false,
   setHasChanges: () => {},
-  saveProgress: async () => {},
+  saveProgress: async () => false,
   registerSaveProgress: () => {},
   closeWorkout: () => {},
   registerCloseWorkout: () => {},

@@ -19,8 +19,7 @@ import exercisesData from '@/lib/data/exercises.json';
 import type { Exercise } from '@/lib/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useState, useRef } from 'react';
-import { useWorkoutSave } from '@/lib/workoutSaveContext';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   RefreshControl,
@@ -141,7 +140,6 @@ export default function ExerciseScreen() {
   const { colors } = useTheme();
   const qc = useQueryClient();
   const userId = session?.user.id ?? '';
-  const { hasChanges, setHasChanges } = useWorkoutSave();
 
   const [activeTab, setActiveTab] = useState<Tab>('splits');
   const [workoutVisible, setWorkoutVisible] = useState(false);

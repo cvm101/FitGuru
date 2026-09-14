@@ -1,12 +1,11 @@
 import '../global.css';
-import { useEffect, useState, useCallback } from 'react';
-import { Stack, useRouter, useSegments, useNavigationContainerRef } from 'expo-router';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider, useAuth } from '@/lib/context/AuthContext';
 import { ThemeProvider } from '@/lib/context/ThemeContext';
 import { WorkoutSaveContext, WorkoutSaveState } from '@/lib/workoutSaveContext';
-import { Alert } from 'react-native';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,25 +48,25 @@ function AuthGate() {
 
 function SaveProvider({ children }: { children: React.ReactNode }) {
   const [hasChanges, setHasChanges] = useState(false);
-  const [saveProgressFn, setSaveProgressFn] = useState<() => Promise<void>>(async () => {});
-  const [closeWorkoutFn, setCloseWorkoutFn] = useState<() => void>(() => {});
+  const [saveProgressFn, setSaveProgressFn] = useState<() => Promise<boolean>>(() => async () => false);
+  const [closeWorkoutFn, setCloseWorkoutFn] = useState<() => void>(() => () => {});
 
-  const registerSaveProgress = (fn: () => Promise<void>) => {
+  const registerSaveProgress = useCallback((fn: () => Promise<boolean>) => {
     setSaveProgressFn(() => fn);
-  };
+  }, []);
 
-  const registerCloseWorkout = (fn: () => void) => {
+  const registerCloseWorkout = useCallback((fn: () => void) => {
     setCloseWorkoutFn(() => fn);
-  };
+  }, []);
 
-  const state = {
+  const state = useMemo<WorkoutSaveState>(() => ({
     hasChanges,
     setHasChanges,
     saveProgress: saveProgressFn,
     registerSaveProgress,
     closeWorkout: closeWorkoutFn,
     registerCloseWorkout,
-  };
+  }), [hasChanges, setHasChanges, saveProgressFn, registerSaveProgress, closeWorkoutFn, registerCloseWorkout]);
 
   return (
     <WorkoutSaveContext.Provider value={state}>

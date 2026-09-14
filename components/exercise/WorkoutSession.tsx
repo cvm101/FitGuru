@@ -71,26 +71,17 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { setHasChanges, registerSaveProgress, registerCloseWorkout } = useWorkoutSave();
   const [exercises, setExercises] = useState<ActiveExercise[]>([]);
-
-  // Save-state sync — only depends on visible and exercises, not on context setters
-  useEffect(() => {
-    if (visible && exercises.length > 0) {
-      setHasUnsavedChanges(true);
-      setHasChanges(true);
-    } else {
-      setHasUnsavedChanges(false);
-      setHasChanges(false);
-    }
-  }, [visible, exercises]);
-
-  // Register save/close handlers once when session opens
-  useEffect(() => {
-    if (visible) {
-      registerSaveProgress(handleFinish);
-      registerCloseWorkout(() => { setExercises([]); setHasUnsavedChanges(false); setHasChanges(false); onClose(); });
-    }
-  }, [visible, handleFinish]);
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
+
+  const markDirty = useCallback(() => {
+    setHasUnsavedChanges(true);
+    setHasChanges(true);
+  }, [setHasChanges]);
+
+  const clearDirty = useCallback(() => {
+    setHasUnsavedChanges(false);
+    setHasChanges(false);
+  }, [setHasChanges]);
   const [saving, setSaving] = useState(false);
   // Which exercise card has its GIF demo panel open
   const [expandedGifId, setExpandedGifId] = useState<string | null>(null);
@@ -115,6 +106,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
         .catch(() => { keepAwakeActiveRef.current = false; });
       startTimeRef.current = Date.now();
       setElapsed(0);
+      clearDirty();
 
       // Continue mode: use pre-filled exercises from a previous session
       if (initialExercises && initialExercises.length > 0) {
@@ -147,8 +139,9 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
       }
       stopRestTimer();
       setExercises([]);
+      clearDirty();
     }
-  }, [visible]);
+  }, [visible, clearDirty]);
 
   // Workout elapsed ticker
   useEffect(() => {
@@ -194,6 +187,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
       sets: [set],
     }]);
     setShowExerciseSearch(false);
+    markDirty();
   }
 
   function addSet(exerciseId: string) {
@@ -202,6 +196,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
         ? { ...ex, sets: [...(ex.sets ?? []), { id: generateId(), weight: ex.sets?.[ex.sets.length - 1]?.weight ?? '', reps: '', rpe: '', done: false }] }
         : ex
     ));
+    markDirty();
   }
 
   function updateSet(exerciseId: string, setId: string, field: 'weight' | 'reps' | 'rpe', value: string) {
@@ -210,6 +205,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
         ? { ...ex, sets: ex.sets.map((s) => (s?.id === setId ? { ...s, [field]: value } : s ?? { id: setId, [field]: value, weight: '', reps: '', rpe: '', done: false })) }
         : ex
     ));
+    markDirty();
   }
 
   function toggleSetDone(exerciseId: string, setId: string) {
@@ -218,34 +214,50 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
         ? { ...ex, sets: ex.sets.map((s) => (s?.id === setId ? { ...s, done: !s?.done } : s ?? { id: setId, done: true, weight: '', reps: '', rpe: '' })) }
         : ex
     ));
+    markDirty();
     // Auto-start rest timer when set is marked done
     startRestTimer(restTotal);
   }
 
-  function removeExercise(id: string) { setExercises((prev) => prev.filter((ex) => ex.id !== id)); }
+  function removeExercise(id: string) {
+    setExercises((prev) => prev.filter((ex) => ex.id !== id));
+    markDirty();
+  }
   function removeSet(exerciseId: string, setId: string) {
     setExercises((prev) =>
       prev.map((ex) =>
         ex.id === exerciseId ? { ...ex, sets: ex.sets.filter((s) => s?.id !== setId) } : ex
       ).filter((ex) => ex.sets.length > 0)
     );
+    markDirty();
   }
 
-  const handleFinish = useCallback(async () => {
-    if (exercises.length === 0) { Alert.alert('Empty Workout', 'Add at least one exercise.'); return; }
+  const handleFinish = useCallback(async (): Promise<boolean> => {
+    if (exercises.length === 0) { Alert.alert('Empty Workout', 'Add at least one exercise.'); return false; }
     // Only save exercises that actually have set data — skip empty ones
     const loggedExercises = exercises.filter((ex) => ex.sets.some((s) => s.weight || s.reps));
     if (loggedExercises.length === 0) {
       Alert.alert('No Sets Logged', 'Fill in at least one weight or rep count before finishing.');
-      return;
+      return false;
     }
     setSaving(true);
     try {
       await onFinish(loggedExercises, Math.ceil(elapsed / 60));
+      clearDirty();
+      return true;
+    } catch {
+      Alert.alert('Could not save workout', 'Please try again.');
+      return false;
     } finally {
       setSaving(false);
     }
-  }, [exercises, onFinish, elapsed]);
+  }, [exercises, onFinish, elapsed, clearDirty]);
+
+  const closeDirect = useCallback(() => {
+    setExercises([]);
+    clearDirty();
+    onClose();
+  }, [clearDirty, onClose]);
 
   const handleClose = useCallback(() => {
     if (hasUnsavedChanges) {
@@ -253,26 +265,29 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
         "Unsaved Changes",
         "You have unsaved changes. Do you want to save them before closing?",
         [
-          { text: "Discard", style: "destructive", onPress: () => {
-            setExercises([]);
-            setHasUnsavedChanges(false);
-            setHasChanges(false);
-            onClose();
-          }},
+          { text: "Discard", style: "destructive", onPress: closeDirect },
           { text: "Cancel", style: "cancel" },
           { text: "Save & Close", onPress: async () => {
-            await handleFinish();
-            setHasUnsavedChanges(false);
-            setHasChanges(false);
-            onClose();
+            const saved = await handleFinish();
+            if (!saved) return;
+            closeDirect();
           }},
         ]
       );
     } else {
-      setExercises([]);
-      onClose();
+      closeDirect();
     }
-  }, [hasUnsavedChanges, setExercises, setHasUnsavedChanges, setHasChanges, onClose, handleFinish]);
+  }, [hasUnsavedChanges, closeDirect, handleFinish]);
+
+  useEffect(() => {
+    if (!visible) {
+      registerSaveProgress(async () => false);
+      registerCloseWorkout(() => {});
+      return;
+    }
+    registerSaveProgress(handleFinish);
+    registerCloseWorkout(closeDirect);
+  }, [visible, handleFinish, closeDirect, registerSaveProgress, registerCloseWorkout]);
 
   const doneCount = exercises.reduce((s, e) => s + e.sets.filter((x) => x.done).length, 0);
   const totalCount = exercises.reduce((s, e) => s + e.sets.length, 0);
@@ -355,7 +370,13 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
           </View>
         )}
 
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 14, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 14, paddingBottom: 100 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
+        >
           {exercises.length === 0 && (
             <View style={{ alignItems: 'center', paddingVertical: 48, gap: 10 }}>
               <View style={{ width: 64, height: 64, backgroundColor: '#ECFDF5', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>

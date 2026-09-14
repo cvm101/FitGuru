@@ -10,9 +10,9 @@ When a user is logging a workout and switches tabs or tries to close the session
 ### How it works
 
 **`lib/workoutSaveContext.ts`** — React context (`WorkoutSaveContext`) shared at the root level:
-- `hasChanges` — boolean; true when the workout modal has been opened AND has exercises/reps entered
+- `hasChanges` — boolean; true only after the user edits the open workout (sets, exercises), not merely because a split was preloaded
 - `setHasChanges(v)` — called by `WorkoutSession` to set/unset the flag
-- `saveProgress` — the currently registered save function (points to `WorkoutSession`'s `handleFinish`)
+- `saveProgress` — the currently registered save function (points to `WorkoutSession`'s `handleFinish`); returns `true` only if the workout was saved
 - `registerSaveProgress(fn)` — called by `WorkoutSession` (inside `useEffect`) to register its `handleFinish`
 - `closeWorkout` — the currently registered close function
 - `registerCloseWorkout(fn)` — called by `WorkoutSession` (inside `useEffect`) to register a direct close (clears state without showing a second alert)
@@ -20,13 +20,16 @@ When a user is logging a workout and switches tabs or tries to close the session
 ### Flows
 
 1. **User closes workout modal via X button** → `WorkoutSession.handleClose` is called → shows alert "Save / Discard / Cancel"
+   - **Save & Close**: saves first; the modal stays open if save validation fails
+   - **Discard**: direct close
+   - **Cancel**: stays in the session
 
-2. **User switches tabs while workout modal is open** → `app/(tabs)/_layout.tsx` detects the tab index change → checks `hasChanges` → shows Alert: "Save / Discard / Cancel"
-   - **Save**: calls `saveProgress()` (→ `handleFinish`, saves to DB) then `closeWorkout()` (→ direct clear, no second alert) then `setHasChanges(false)`
-   - **Discard**: calls `closeWorkout()` then `setHasChanges(false)`
-   - **Cancel**: does nothing (user stays)
+2. **User switches tabs while workout modal is open** → `app/(tabs)/_layout.tsx` intercepts `tabPress` with `preventDefault()` so the tab does not change until they choose:
+   - **Save**: calls `saveProgress()`; navigates only if save returns `true`, then `closeWorkout()`
+   - **Discard**: calls `closeWorkout()` then navigates
+   - **Cancel**: does nothing (user stays on Exercise with the modal open)
 
 ### Important rules
-- Always call `registerSaveProgress` / `registerCloseWorkout` **inside a `useEffect`** to avoid stale closures
+- Always call `registerSaveProgress` / `registerCloseWorkout` **inside a `useEffect` after `handleFinish` is defined** to avoid stale closures and TDZ errors
 - `handleFinish` and `handleClose` in `WorkoutSession` are wrapped in `useCallback` — update their deps if you add more state dependencies
 - `closeWorkout` registered for tab-switch is a **direct close** (skips the alert) to avoid double-prompting after the user already chose in the tab-switch alert
