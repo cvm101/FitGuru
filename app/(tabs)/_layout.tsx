@@ -1,8 +1,10 @@
 import { Tabs } from 'expo-router';
-import { View, Text, Platform } from 'react-native';
+import { View, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useWorkoutSave } from '@/lib/workoutSaveContext';
+import { useRef } from 'react';
 
-function TabIcon({ name, label, color, focused }: { name: any; label: string; color: any; focused: boolean }) {
+function TabIcon({ name, focused }: { name: any; focused: boolean }) {
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 2 }}>
       <View style={{
@@ -22,8 +24,55 @@ function TabIcon({ name, label, color, focused }: { name: any; label: string; co
 }
 
 export default function TabsLayout() {
+  const { hasChanges, saveProgress, setHasChanges, closeWorkout } = useWorkoutSave();
+  const hasChangesRef = useRef(hasChanges);
+  const saveProgressRef = useRef(saveProgress);
+  const closeWorkoutRef = useRef(closeWorkout);
+  const setHasChangesRef = useRef(setHasChanges);
+  hasChangesRef.current = hasChanges;
+  saveProgressRef.current = saveProgress;
+  closeWorkoutRef.current = closeWorkout;
+  setHasChangesRef.current = setHasChanges;
+
   return (
     <Tabs
+      screenListeners={({ navigation, route }) => ({
+        tabPress: (e) => {
+          if (!hasChangesRef.current) return;
+          const state = navigation.getState();
+          const currentName = state.routes[state.index]?.name;
+          if (route.name === currentName) return;
+
+          e.preventDefault();
+          const target = route.name;
+          Alert.alert(
+            'Unsaved Workout Changes',
+            'You have unsaved workout changes. Would you like to save them before leaving?',
+            [
+              {
+                text: 'Discard',
+                style: 'destructive',
+                onPress: () => {
+                  closeWorkoutRef.current();
+                  setHasChangesRef.current(false);
+                  navigation.navigate(target as never);
+                },
+              },
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Save',
+                onPress: async () => {
+                  const saved = await saveProgressRef.current();
+                  if (!saved) return;
+                  closeWorkoutRef.current();
+                  setHasChangesRef.current(false);
+                  navigation.navigate(target as never);
+                },
+              },
+            ]
+          );
+        },
+      })}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: '#059669',
@@ -52,28 +101,28 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="home" label="Dashboard" color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="home" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="calories"
         options={{
           title: 'Calories',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="nutrition" label="Calories" color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="nutrition" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="exercise"
         options={{
           title: 'Exercise',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="barbell" label="Exercise" color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="barbell" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, focused }) => <TabIcon name="person-circle" label="Profile" color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="person-circle" focused={focused} />,
         }}
       />
     </Tabs>

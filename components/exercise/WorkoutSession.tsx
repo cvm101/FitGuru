@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, memo } from 'react';
+import { useState, useRef, useEffect, memo, useCallback } from 'react';
+import { useWorkoutSave } from '@/lib/workoutSaveContext';
 import {
   View,
   Text,
@@ -10,6 +11,7 @@ import {
   Vibration,
   Platform,
   Image,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -66,8 +68,20 @@ function formatTime(secs: number) {
 }
 
 export default function WorkoutSession({ visible, splitName, suggestedExercises = [], initialExercises, onFinish, onClose }: WorkoutSessionProps) {
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const { setHasChanges, registerSaveProgress, registerCloseWorkout } = useWorkoutSave();
   const [exercises, setExercises] = useState<ActiveExercise[]>([]);
   const [showExerciseSearch, setShowExerciseSearch] = useState(false);
+
+  const markDirty = useCallback(() => {
+    setHasUnsavedChanges(true);
+    setHasChanges(true);
+  }, [setHasChanges]);
+
+  const clearDirty = useCallback(() => {
+    setHasUnsavedChanges(false);
+    setHasChanges(false);
+  }, [setHasChanges]);
   const [saving, setSaving] = useState(false);
   // Which exercise card has its GIF demo panel open
   const [expandedGifId, setExpandedGifId] = useState<string | null>(null);
@@ -92,10 +106,13 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
         .catch(() => { keepAwakeActiveRef.current = false; });
       startTimeRef.current = Date.now();
       setElapsed(0);
+      clearDirty();
 
       // Continue mode: use pre-filled exercises from a previous session
       if (initialExercises && initialExercises.length > 0) {
-        setExercises(initialExercises);
+        setExercises(initialExercises
+          .filter((ex) => ex && Array.isArray(ex.sets) && ex.sets.length > 0)
+          .map((ex) => ({ ...ex, sets: ex.sets.filter(Boolean) })));
       } else if (suggestedExercises.length > 0) {
         // Pre-populate with all suggested exercises from the split day
         const preloaded: ActiveExercise[] = suggestedExercises.map((name) => {
@@ -122,8 +139,9 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
       }
       stopRestTimer();
       setExercises([]);
+      clearDirty();
     }
-  }, [visible]);
+  }, [visible, clearDirty]);
 
   // Workout elapsed ticker
   useEffect(() => {
@@ -169,59 +187,107 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
       sets: [set],
     }]);
     setShowExerciseSearch(false);
+    markDirty();
   }
 
   function addSet(exerciseId: string) {
     setExercises((prev) => prev.map((ex) =>
       ex.id === exerciseId
-        ? { ...ex, sets: [...ex.sets, { id: generateId(), weight: ex.sets[ex.sets.length - 1]?.weight ?? '', reps: '', rpe: '', done: false }] }
+        ? { ...ex, sets: [...(ex.sets ?? []), { id: generateId(), weight: ex.sets?.[ex.sets.length - 1]?.weight ?? '', reps: '', rpe: '', done: false }] }
         : ex
     ));
+    markDirty();
   }
 
   function updateSet(exerciseId: string, setId: string, field: 'weight' | 'reps' | 'rpe', value: string) {
     setExercises((prev) => prev.map((ex) =>
       ex.id === exerciseId
-        ? { ...ex, sets: ex.sets.map((s) => (s.id === setId ? { ...s, [field]: value } : s)) }
+        ? { ...ex, sets: ex.sets.map((s) => (s?.id === setId ? { ...s, [field]: value } : s ?? { id: setId, [field]: value, weight: '', reps: '', rpe: '', done: false })) }
         : ex
     ));
+    markDirty();
   }
 
   function toggleSetDone(exerciseId: string, setId: string) {
     setExercises((prev) => prev.map((ex) =>
       ex.id === exerciseId
-        ? { ...ex, sets: ex.sets.map((s) => (s.id === setId ? { ...s, done: !s.done } : s)) }
+        ? { ...ex, sets: ex.sets.map((s) => (s?.id === setId ? { ...s, done: !s?.done } : s ?? { id: setId, done: true, weight: '', reps: '', rpe: '' })) }
         : ex
     ));
+    markDirty();
     // Auto-start rest timer when set is marked done
     startRestTimer(restTotal);
   }
 
-  function removeExercise(id: string) { setExercises((prev) => prev.filter((ex) => ex.id !== id)); }
+  function removeExercise(id: string) {
+    setExercises((prev) => prev.filter((ex) => ex.id !== id));
+    markDirty();
+  }
   function removeSet(exerciseId: string, setId: string) {
     setExercises((prev) =>
       prev.map((ex) =>
-        ex.id === exerciseId ? { ...ex, sets: ex.sets.filter((s) => s.id !== setId) } : ex
+        ex.id === exerciseId ? { ...ex, sets: ex.sets.filter((s) => s?.id !== setId) } : ex
       ).filter((ex) => ex.sets.length > 0)
     );
+    markDirty();
   }
 
-  async function handleFinish() {
-    if (exercises.length === 0) { Alert.alert('Empty Workout', 'Add at least one exercise.'); return; }
+  const handleFinish = useCallback(async (): Promise<boolean> => {
+    if (exercises.length === 0) { Alert.alert('Empty Workout', 'Add at least one exercise.'); return false; }
     // Only save exercises that actually have set data — skip empty ones
     const loggedExercises = exercises.filter((ex) => ex.sets.some((s) => s.weight || s.reps));
     if (loggedExercises.length === 0) {
       Alert.alert('No Sets Logged', 'Fill in at least one weight or rep count before finishing.');
-      return;
+      return false;
     }
     setSaving(true);
-    try { await onFinish(loggedExercises, Math.ceil(elapsed / 60)); } finally { setSaving(false); }
-  }
+    try {
+      await onFinish(loggedExercises, Math.ceil(elapsed / 60));
+      clearDirty();
+      return true;
+    } catch {
+      Alert.alert('Could not save workout', 'Please try again.');
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }, [exercises, onFinish, elapsed, clearDirty]);
 
-  function handleClose() {
+  const closeDirect = useCallback(() => {
     setExercises([]);
+    clearDirty();
     onClose();
-  }
+  }, [clearDirty, onClose]);
+
+  const handleClose = useCallback(() => {
+    if (hasUnsavedChanges) {
+      Alert.alert(
+        "Unsaved Changes",
+        "You have unsaved changes. Do you want to save them before closing?",
+        [
+          { text: "Discard", style: "destructive", onPress: closeDirect },
+          { text: "Cancel", style: "cancel" },
+          { text: "Save & Close", onPress: async () => {
+            const saved = await handleFinish();
+            if (!saved) return;
+            closeDirect();
+          }},
+        ]
+      );
+    } else {
+      closeDirect();
+    }
+  }, [hasUnsavedChanges, closeDirect, handleFinish]);
+
+  useEffect(() => {
+    if (!visible) {
+      registerSaveProgress(async () => false);
+      registerCloseWorkout(() => {});
+      return;
+    }
+    registerSaveProgress(handleFinish);
+    registerCloseWorkout(closeDirect);
+  }, [visible, handleFinish, closeDirect, registerSaveProgress, registerCloseWorkout]);
 
   const doneCount = exercises.reduce((s, e) => s + e.sets.filter((x) => x.done).length, 0);
   const totalCount = exercises.reduce((s, e) => s + e.sets.length, 0);
@@ -246,7 +312,8 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
-      <View style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }} keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
+        <View style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
         {/* Header */}
         <LinearGradient colors={['#0F172A', '#1E293B']} style={{ paddingTop: 48, paddingBottom: 16, paddingHorizontal: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -303,7 +370,13 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
           </View>
         )}
 
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 14, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 14, paddingBottom: 100 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
+        >
           {exercises.length === 0 && (
             <View style={{ alignItems: 'center', paddingVertical: 48, gap: 10 }}>
               <View style={{ width: 64, height: 64, backgroundColor: '#ECFDF5', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
@@ -316,7 +389,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
             </View>
           )}
 
-          {exercises.map((ex) => (
+          {exercises.filter(Boolean).map((ex) => (
             <View key={ex.id} style={{ backgroundColor: 'white', borderRadius: 20, marginBottom: 12, overflow: 'hidden', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 }}>
               {/* Exercise header */}
               <TouchableOpacity
@@ -452,6 +525,7 @@ export default function WorkoutSession({ visible, splitName, suggestedExercises 
           )}
         </ScrollView>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
