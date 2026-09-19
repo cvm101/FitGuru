@@ -8,7 +8,8 @@
     "scheme": "caloritracker",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fitguru.caloritracker"
     },
     "android": {
       "adaptiveIcon": {
